@@ -1,0 +1,26 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "default",
+            "architecture": "Win32",
+            "cacheVariables": {
+                "CMAKE_GENERATOR_PLATFORM": "Win32"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Debug",
+            "configurePreset": "default",
+            "configuration": "Debug",
+            "targets": [ "install", "exf1" ]
+        },
+        {
+            "name": "MinSizeRel",
+            "configurePreset": "default",
+            "configuration": "MinSizeRel",
+            "targets": [ "install", "exf1" ]
+        }
+    ]
+}

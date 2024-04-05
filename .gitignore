@@ -1,0 +1,6 @@
+*.pbl
+*.opt
+*.lib
+*.exp
+*.dll
+cpp/build/
