@@ -112,7 +112,7 @@ this.width = 2140
 if pos(st_upload.text, '~n') > 0 then
 	this.height = 1100
 else
-	this.height = 1010
+	this.height = 1050
 end if
 
 tv_data.hide()
