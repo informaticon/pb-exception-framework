@@ -110,7 +110,7 @@ red=unchecked exceptions (aka runtime errors)
 | u_exf_re_notimplemented | For the implementation of abstract classes (e.g. you want to force the developer to overwrite a certain function and therefore throw such an unchecked exception in the base class) |
 | u_exf_re_systemerror | Should only be thrown in the application's systemerror event |
 
-# Hot to build
+# How to build
 
 ## Requirements
 * PowerBuilder Compiler (pbcXXX.exe and orcascrXXX.exe)
@@ -127,6 +127,11 @@ You can choose the PB compiler version by setting the PB_VERSION variable:
 ```powershell
 make build PB_VERSION=170
 ```
+
+# How to contribute
+
+Please read [CONTRIBUTING.md](CONTRIBUTUNG.md) before sending a pull request.
+
 
 # Related work
 
