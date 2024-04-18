@@ -130,7 +130,7 @@ make build PB_VERSION=170
 
 # How to contribute
 
-Please read [CONTRIBUTING.md](CONTRIBUTUNG.md) before sending a pull request.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before sending a pull request.
 
 
 # Related work
