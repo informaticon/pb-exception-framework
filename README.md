@@ -7,7 +7,7 @@ In this documentation, the term "exception" is used to describe as well exceptio
 
 * Simplified exception creation
 * Meaningful and userfriendly error messages
-* Additional error types which allow to store arbitary data (context information)
+* Additional error types which allow to store arbitrary data (context information)
 * Automatic stack trace determination
 
 ## Screenshot
@@ -77,7 +77,7 @@ lu_adapter = create u_demo_exf_adapter
 gu_e.of_set_app_adapter(lu_adapter)
 ```
 
-There are several predifined functions which you can override, the most important are:
+There are several predefined functions which you can override, the most important are:
 
 | function | purpose |
 | ------------- | ------------- |
@@ -102,7 +102,7 @@ red=unchecked exceptions (aka runtime errors)
 | u_exf_ex_pbni | PowerBuilder Extensions (functions in C++) can/should throw this exception type (see Informaticon PBNI Framework) |
 | u_exf_ex_webrequest | Errors that can occur when sending, receiving and processing requests in Internet protocols such as HTTP, HTTPS, FTP etc. |
 | runtimeerror | Predefined unchecked exception of the PowerBuilder |
-| u_exf_re | Unchecked exception of the EXF, you should your this instead of runtimeerror |
+| u_exf_re | Unchecked exception of the EXF, you should use this instead of runtimeerror |
 | u_exf_re_database | Database error or error in a Datawindow or Datastore |
 | u_exf_re_illegalargument | Can be thrown if the arguments passed to a function do not meet the requirements (e.g. if an argument is unauthorised NULL, or a long must not be <= 0) |
 | u_exf_re_invalidstate | Can be thrown if an object has entered an invalid (inconsistent) state
