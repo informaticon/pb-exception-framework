@@ -6,11 +6,11 @@ We are open for feedback and we value suggestions.
 ## Testing
 
 We have our own framework for unit testing which is not open source (yet).
-If you want to hand in test cases, please to this by opening an issue and posting the code there (you can also provide us a [Github Gist](https://gist.github.com/) link).
+If you want to hand in test cases, please do this by opening an issue and posting the code there (you can also provide us a [Github Gist](https://gist.github.com/) link).
 
 ## Submitting changes
 
-Please send a GitHub Pull Request to to the main with a clear list of what you've done.
+Please send a GitHub Pull Request to the main with a clear list of what you've done.
 Please follow our coding conventions (below).
 
 Always write a clear log message for your commits.
