@@ -14,7 +14,7 @@ In this documentation, the term "exception" is used to describe as well exceptio
 
 ![Screenshot](docs/assets/screenshot.png)
 
-# Usage
+## Usage
 
 You can find a more detailed documentation in German [here](docs/RADME.md).  
 To use the exception framework, you have to instantiate it globally in your application object:
@@ -27,7 +27,7 @@ u_exf_error_manager gu_e
 gu_e = create u_exf_error_manager
 ```
 
-## Throwing an exception
+### Throwing an exception
 
 ```powerbuilder
 throw(gu_e.iu_as.of_ex(gu_e.of_new_error() &
@@ -35,7 +35,7 @@ throw(gu_e.iu_as.of_ex(gu_e.of_new_error() &
 ))
 ```
 
-## Add context
+### Add context
 
 You can store every possible value in an exception.
 Some are automatically serialised, for others you have to extend `u_exf_application_adapter.of_parse_to_blob()`.
@@ -54,7 +54,7 @@ throw(gu_e.iu_as.of_ex(gu_e.of_new_error() &
 ))
 ```
 
-## Catch and display an exception
+### Catch and display an exception
 
 ```powerbuilder
 try
@@ -64,7 +64,7 @@ catch(u_exf_ex lu_e)
 end try
 ```
 
-## Translation / Customisation
+### Translation / Customisation
 
 The idea is not to change EXF classes directly, but to use an adapter object to override certain behaviour.
 For this, you have to implement an adapter class derived from `u_exf_application_adapter` and register it during application startup:
@@ -85,9 +85,7 @@ There are several predefined functions which you can override, the most importan
 | of_parse_to_blob  | Is called whenever EXF wants to serialize an object (toString-function). |
 | of_spawn_window  | Is called whenever EXF wants to display a window. |
 
-## Main classes
-
-### Exception types
+### Built-in exception types
 
 ![Exception types](docs/assets/exception_overview.png)
 
@@ -110,15 +108,15 @@ red=unchecked exceptions (aka runtime errors)
 | u_exf_re_notimplemented | For the implementation of abstract classes (e.g. you want to force the developer to overwrite a certain function and therefore throw such an unchecked exception in the base class) |
 | u_exf_re_systemerror | Should only be thrown in the application's systemerror event |
 
-# How to build
+## How to build
 
-## Requirements
+### Requirements
 * PowerBuilder Compiler (pbcXXX.exe and orcascrXXX.exe)
 * Make ([direct download](https://gnuwin32.sourceforge.net/packages/make.htm) or via [choco](https://community.chocolatey.org/packages/make))
 * CMake ([direct download](https://cmake.org/download/) or via [choco](https://community.chocolatey.org/packages/cmake))
 * Microsoft Visual C++ Build Tools (e.g. from [MS Visual Studio 2022 Community Edition](https://visualstudio.microsoft.com/de/vs/community/))
 
-## Tasks
+### Tasks
 
 Just open a console at the root folder of this project and run `make build`.
 
@@ -128,11 +126,11 @@ You can choose the PB compiler version by setting the PB_VERSION variable:
 make build PB_VERSION=170
 ```
 
-# How to contribute
+## How to contribute
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) before sending a pull request.
 
 
-# Related work
+## Related work
 
 Part of the code for the stacktrace function was kindly made available under the MIT licence by [Jeremy Lakeman](https://github.com/lakeman/fastfuncs).
