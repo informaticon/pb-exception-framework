@@ -10,7 +10,7 @@ If you want to hand in test cases, please do this by opening an issue and postin
 
 ## Submitting changes
 
-Please send a GitHub Pull Request to the main with a clear list of what you've done.
+Please send a GitHub Pull Request to the main branch with a clear list of what you've done and what you'd like to achieve with the change.
 Please follow our coding conventions (below).
 
 Always write a clear log message for your commits.
