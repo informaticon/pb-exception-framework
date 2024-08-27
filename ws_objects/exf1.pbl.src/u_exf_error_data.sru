@@ -57,11 +57,12 @@ public function u_exf_error_data of_push (string as_key, dwbuffer adwbuffer_valu
 protected function long pf_get_keyval_row (string as_key)
 public function string of_to_string ()
 public function u_exf_error_data of_set_nested_error (throwable ath_throwable)
-public function u_exf_error_data of_set_stacktrace ()
 public function string of_get_stacktrace ()
 public function u_exf_error_data of_set_keyval_store (datastore ads_keyval_store)
 public function blob of_get_value (string as_name, string as_type)
 public function string of_get_as_string ()
+public function u_exf_error_data of_set_stacktrace (string as_stacktrace)
+public function u_exf_error_data of_set_stacktrace ()
 end prototypes
 
 public function u_exf_error_data of_set_message (string as_message);//Zweck		Nimmt die Fehlermeldung der künftigen Exception/RuntimeError entegegen
@@ -527,26 +528,6 @@ end if
 return this
 end function
 
-public function u_exf_error_data of_set_stacktrace ();//Zweck		Ermittelt den aktuellen Stacktrace
-//				Falls bereits ein Stacktrace gesetzt wurde, wird er durch den aktuellen Stacktrace ersetzt
-//				Normalerweise wird diese Funktion nicht benötigt, weil dies bereits mit gu_e.of_new_error()
-//				gemacht wird
-//Return		u_exf_error_data	this
-//Erstellt	2022-07-19 Simon Reichenbach
-
-long ll_row
-
-ll_row = pf_get_keyval_row(CS_KEY_STACKTRACE)
-if ll_row = 0 then
-	ll_row = pds_keyval_store.insertrow(0)
-end if
-
-pds_keyval_store.setitem(ll_row, 1, CS_KEY_STACKTRACE)
-pds_keyval_store.setitem(ll_row, 2, gu_e.of_get_stacktrace())
-
-return this
-end function
-
 public function string of_get_stacktrace ();//Zweck		Gibt den in der Exception gespeicherte Stacktrace zurück
 //Return		string	Stacktrace im Format 'w_master.of_test(): 1~r~nw_test.dw_detail.+ue_test(): 4~r~n'
 //Erstellt	2022-07-18 Simon Reichenbach	Ticket 300424: Stacktrace implementiert
@@ -597,6 +578,39 @@ public function string of_get_as_string ();//Deprecated	2022-10-04 Simon Reichen
 
 return this.of_to_string()
 
+end function
+
+public function u_exf_error_data of_set_stacktrace (string as_stacktrace);//Zweck		Ermittelt den aktuellen Stacktrace
+//			Falls bereits ein Stacktrace gesetzt wurde, wird er durch den aktuellen Stacktrace ersetzt
+//			Normalerweise wird diese Funktion nicht benötigt, weil dies bereits mit gu_e.of_new_error()
+//			gemacht wird
+//Argument	as_stacktrace (Zeilenseparierter String, welcher den Stacktrace enthält)
+//Return	u_exf_error_data	this
+//Erstellt	2022-07-19 Simon Reichenbach
+//Geändert	2024-08-26 Simon Jutzi
+
+long ll_row
+
+ll_row = pf_get_keyval_row(CS_KEY_STACKTRACE)
+if ll_row = 0 then
+	ll_row = pds_keyval_store.insertrow(0)
+end if
+
+pds_keyval_store.setitem(ll_row, 1, CS_KEY_STACKTRACE)
+pds_keyval_store.setitem(ll_row, 2, as_stacktrace)
+
+return this
+end function
+
+public function u_exf_error_data of_set_stacktrace ();//Zweck		Ermittelt den aktuellen Stacktrace
+//			Falls bereits ein Stacktrace gesetzt wurde, wird er durch den aktuellen Stacktrace ersetzt
+//			Normalerweise wird diese Funktion nicht benötigt, weil dies bereits mit gu_e.of_new_error()
+//			gemacht wird
+//Return	u_exf_error_data	this
+//Erstellt	2022-07-19 Simon Reichenbach
+//Geändert	2024-08-27 Simon Jutzi
+
+return of_set_stacktrace(gu_e.of_get_stacktrace())
 end function
 
 on u_exf_error_data.create

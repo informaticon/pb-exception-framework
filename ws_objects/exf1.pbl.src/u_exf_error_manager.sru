@@ -52,9 +52,11 @@ public subroutine of_set_app_adapter (u_exf_application_adapter au_app_adapter)
 public subroutine of_display (throwable ath_error)
 public function u_exf_application_adapter of_get_app_adapter ()
 public function string of_get_stacktrace ()
-public function long of_get_stacktrace (ref string as_stacktrace[])
 public subroutine of_save_to_file (u_exf_error_data au_error, string as_filepath)
 public subroutine of_save_to_file (u_exf_error_data au_error)
+public function u_exf_error_data of_new_error (string as_message)
+protected function long pf_get_stacktrace (ref string as_stacktrace[], long al_cut)
+public function long of_get_stacktrace (ref string as_stacktrace[])
 end prototypes
 
 public subroutine of_display (u_exf_error_data au_error);//Zweck		Zeigt dem Benutzer eine u_exf_error_data-Instanz als Fehlermeldung an
@@ -260,33 +262,6 @@ catch(throwable ath_e)
 end try
 end function
 
-public function long of_get_stacktrace (ref string as_stacktrace[]);//Zweck		Gibt den aktuellen Stacktrace zurück
-//Argument	ref as_stacktrace[]	Array mit Stacktrace (pro Funktion eine Zeile)
-//Return		n	Anzahl Elemente in as_stacktrace
-//				0	Falls ein Fehler auftritt
-//Erstellt	2022-07-19 Simon Reichenbach	Ticket 300424: Stacktrace implementiert
-
-string ls_ret[]
-long ll_i
-
-//as_stacktrace leeren
-as_stacktrace = ls_ret
-
-try
-	pef_get_stacktrace(ls_ret)
-	
-	//Letztes Element ist of_get_stacktrace(), das interessiert nicht und wird deshalb abgeschnitten
-	for ll_i = 1 to upperbound(ls_ret) - 1
-		as_stacktrace[ll_i] = ls_ret[ll_i]
-	next
-	
-	return upperbound(as_stacktrace[])
-
-catch(throwable ath_e)
-	return 0
-end try
-end function
-
 public subroutine of_save_to_file (u_exf_error_data au_error, string as_filepath);//Zweck		Exportiert alle Daten eines u_exf_error_data-Objekts in einen bestimmten Pfad
 //				JSON Objekt mit der Dateiendung .exf
 //Argument	au_error		u_exf_error_data-Instanz
@@ -347,6 +322,66 @@ finally
 end try
 
 end subroutine
+
+public function u_exf_error_data of_new_error (string as_message);//Zweck		Instanziert ein neues u_exf_error_data-Objekt
+//Argument	as_message	Fehlermeldung => Aufruf von of_push(populateerror(0, <MESSAGE>)) entfällt
+//Return	u_exf_error_data
+//Erstellt	2024-08-27 Simon Jutzi
+
+string ls_stacktrace[]
+string ls_stacktrace_s
+long ll_i
+
+u_exf_error_data lu_error
+lu_error = create u_exf_error_data
+
+pf_get_stacktrace(ls_stacktrace, 2)
+for ll_i = 1 to upperbound(ls_stacktrace)
+	ls_stacktrace_s += ls_stacktrace[ll_i] + '~r~n'
+next
+lu_error.of_set_stacktrace(ls_stacktrace_s)
+lu_error.of_set_message(as_message)
+
+return lu_error
+end function
+
+protected function long pf_get_stacktrace (ref string as_stacktrace[], long al_cut);//Zweck		Gibt den aktuellen Stacktrace zurück
+//Argument	ref as_stacktrace[]	Array mit Stacktrace (pro Funktion eine Zeile)
+//			al_cut				Anzahl ELemente, die am Schluss gelöscht werden sollen
+//Return		n	Anzahl Elemente in as_stacktrace
+//				0	Falls ein Fehler auftritt
+//Erstellt	2022-07-19 Simon Reichenbach	Ticket 300424: Stacktrace implementiert
+
+string ls_ret[]
+long ll_i
+
+//as_stacktrace leeren
+as_stacktrace = ls_ret
+
+try
+	pef_get_stacktrace(ls_ret)
+	
+	//Letztes Element ist of_get_stacktrace(), das interessiert nicht und wird deshalb abgeschnitten
+	for ll_i = 1 to upperbound(ls_ret) - al_cut
+		as_stacktrace[ll_i] = ls_ret[ll_i]
+	next
+	
+	return upperbound(as_stacktrace[])
+
+catch(throwable ath_e)
+	return 0
+end try
+end function
+
+public function long of_get_stacktrace (ref string as_stacktrace[]);//Zweck		Gibt den aktuellen Stacktrace zurück
+//Argument	ref as_stacktrace[]	Array mit Stacktrace (pro Funktion eine Zeile)
+//Return		n	Anzahl Elemente in as_stacktrace
+//				0	Falls ein Fehler auftritt
+//Erstellt	2022-07-19 Simon Reichenbach	Ticket 300424: Stacktrace implementiert
+//Geändert	2024-08-27 Simon Jutzi			Überladung hinzugefügt
+
+return pf_get_stacktrace(as_stacktrace, 2)
+end function
 
 on u_exf_error_manager.create
 call super::create
