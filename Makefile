@@ -1,34 +1,39 @@
-.ONESHELL:
-
+.PHONY=clean build
 SHELL := cmd.exe
-MSVC_PATH ?= C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC
-PB_VERSION ?= 220
 
-build: demo.pbl exf1.pbl exf1.dll
-	pbc$(PB_VERSION).exe /f /m n /d demo.pbt
+PB_RUNTIME ?= 25.0.0.3453
+PLATFORM ?= x86
 
-demo.pbl exf1.pbl:
-	orcascr$(PB_VERSION).exe .\build.orcascript
+PB_MAJOR := $(basename $(basename $(basename $(PB_RUNTIME))))
+TARGET := pb$(PB_MAJOR)$(PLATFORM)
 
-exf1.dll:
-	for /F "delims=" %%i IN ('dir "$(MSVC_PATH)" /b /ad-h /t:c /od') do set PATH=$(MSVC_PATH)\%%i\bin\Hostx64\x86;%PATH%
+build: build/out/$(TARGET)/exf1.pbd build/out/$(TARGET)/exf1.dll
 
-	lib /def:cpp/lib/pbvm.def /out:cpp/lib/pbvm.lib /machine:x86
-	lib /def:cpp/lib/pbshr.def /out:cpp/lib/pbshr.lib /machine:x86
+tests: build/out/$(TARGET)/exf1.dll
+	if not exist "build/tests/$(TARGET)" mkdir "build/tests/$(TARGET)"
+	.\scripts\build_tests.bat $(PB_RUNTIME) $(PLATFORM) build/tests/$(TARGET) build/tests/$(TARGET)
+	xcopy /s /y build\out\$(TARGET)\exf1.dll build\tests\$(TARGET)
+	.\build\tests\$(TARGET)\test_exf.exe --run-all --quiet
 
-	cmake cpp -B cpp\build --preset default
-	cmake --build cpp\build --config MinSizeRel
-	cmake --install cpp\build --config MinSizeRel
+analyzer: build/out/$(TARGET)/exf1.dll
+	if not exist "build/analyzer/$(TARGET)" mkdir "build/analyzer/$(TARGET)"
+	.\scripts\build_analyzer.bat $(PB_RUNTIME) $(PLATFORM) build/analyzer/$(TARGET) build/analyzer/$(TARGET)
+	xcopy /s /y build\out\$(TARGET)\exf1.dll build\analyzer\$(TARGET)
+
+build/out/$(TARGET)/exf1.dll:
+	.\scripts\build_dll.bat $(PB_RUNTIME) $(PLATFORM) build/out/$(TARGET) build/dll/$(TARGET)
+
+build/out/$(TARGET)/exf1.pbd: build/demo/$(TARGET)
+	xcopy /s /y build\demo\$(TARGET)\exf1.pbd build\out\$(TARGET)
+
+build/demo/$(TARGET): build/out/$(TARGET)/exf1.dll
+	if not exist "build/demo/$(TARGET)" mkdir "build/demo/$(TARGET)"
+	.\scripts\build_demo.bat $(PB_RUNTIME) $(PLATFORM) build/demo/$(TARGET) build/demo/$(TARGET)
+	xcopy /s /y build\out\$(TARGET)\exf1.dll build\demo\$(TARGET)
 
 clean:
-	rmdir /S /Q cpp\build
-	del /S /Q cpp\lib\*.lib
-	del /S /Q cpp\lib\*.exp
-	del /S /Q exf1.dll
-	del /S /Q demo.xml
-	del /S /Q *.pbl
-	del /S /Q *.pbd
-	del /S /Q *.exe
-	del /S /Q *.opt
-
-FORCE: ;
+	if exist "build/out" rmdir /s /q "build/out"
+	if exist "build/dll" rmdir /s /q "build/dll"
+	if exist "build/demo" rmdir /s /q "build/demo"
+	if exist "build/analyzer" rmdir /s /q "build/analyzer"
+	if exist "build/tests" rmdir /s /q "build/tests"

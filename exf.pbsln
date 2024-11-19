@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Solution>
+  <Projects Default="analyzer\exf_analyzer.pbproj">
+    <Project Path="demo\demo.pbproj"/>
+    <Project Path="analyzer\exf_analyzer.pbproj"/>
+    <Project Path="test\test_exf.pbproj"/>
+  </Projects>
+</Solution>

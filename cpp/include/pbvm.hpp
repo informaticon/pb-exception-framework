@@ -75,6 +75,7 @@ typedef struct {
 	char data[1];
 }blob;
 
+
 #define IS_NULL 1
 #define IS_ARRAY 0x2000
 

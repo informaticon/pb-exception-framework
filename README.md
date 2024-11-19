@@ -1,7 +1,7 @@
 # Informaticon Exception Framework
 
-The Exception Framework (EXF) helps to streamline the management of exceptions/runtimeerrors in PowerBuilder.
-In this documentation, the term "exception" is used to describe as well exceptions as runtimeerror.
+Informaticon Exception Framework (EXF) helps to streamline the management of exceptions/runtimeerrors in PowerBuilder.
+In this documentation, the term "exception" is used to describe exceptions as well as runtimeerrors.
 
 ## Features
 
@@ -9,6 +9,7 @@ In this documentation, the term "exception" is used to describe as well exceptio
 * Meaningful and userfriendly error messages
 * Additional error types which allow to store arbitrary data (context information)
 * Automatic stack trace determination
+* Serialisation and deserialisation of exceptions
 
 ## Screenshot
 
@@ -30,9 +31,7 @@ gu_e = create u_exf_error_manager
 ### Throwing an exception
 
 ```powerbuilder
-throw(gu_e.iu_as.of_ex(gu_e.of_new_error() &
-    .of_push(populateerror(0, 'Connection timed out')) &
-))
+throw(gu_e.iu_as.of_ex(gu_e.of_new_error('Connection timed out')))
 ```
 
 ### Add context
@@ -46,8 +45,7 @@ string ls_description
 u_my_class lu
 //...
 
-throw(gu_e.iu_as.of_ex(gu_e.of_new_error() &
-    .of_push(populateerror(0, 'Connection timed out')) &
+throw(gu_e.iu_as.of_ex(gu_e.of_new_error('Connection timed out') &
     .of_push('description', ls_description) &
     .of_push('lu', lu) &
     .of_push('lds', lds) &
@@ -82,7 +80,7 @@ There are several predefined functions which you can override, the most importan
 | function | purpose |
 | ------------- | ------------- |
 | of_get_text | Translation, is called for each text displayed by EXF (e.g. 14947->'Cancel'). |
-| of_parse_to_blob  | Is called whenever EXF wants to serialize an object (toString-function). |
+| of_parse_to_blob  | Is called whenever EXF wants to serialise an object (toString-function). |
 | of_spawn_window  | Is called whenever EXF wants to display a window. |
 
 ### Built-in exception types
@@ -111,19 +109,20 @@ red=unchecked exceptions (aka runtime errors)
 ## How to build
 
 ### Requirements
-* PowerBuilder Compiler (pbcXXX.exe and orcascrXXX.exe)
+* PowerBuilder Compiler (pbcXXX.exe / PBAutoBuild250.exe))
 * Make ([direct download](https://gnuwin32.sourceforge.net/packages/make.htm) or via [choco](https://community.chocolatey.org/packages/make))
 * CMake ([direct download](https://cmake.org/download/) or via [choco](https://community.chocolatey.org/packages/cmake))
 * Microsoft Visual C++ Build Tools (e.g. from [MS Visual Studio 2022 Community Edition](https://visualstudio.microsoft.com/de/vs/community/))
+* pbmanager (not open source (yet), needed to convert PB Solution to PB <= 22.2)
 
 ### Tasks
 
 Just open a console at the root folder of this project and run `make build`.
 
-You can choose the PB compiler version by setting the PB_VERSION variable:
+You can choose the PB compiler version by setting the PB_RUNTIME variable:
 
 ```powershell
-make build PB_VERSION=170
+make build PB_RUNTIME=22.2.0.3356
 ```
 
 ## How to contribute

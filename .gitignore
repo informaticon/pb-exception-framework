@@ -1,16 +1,7 @@
-
-# PowerBuilder files and builds
-*.pbl
-*.pbd
-demo.xml
-*.opt
+build
+.pb
 *.dll
 *.exe
-
-# Cpp files
-cpp/build/
-*.lib
-*.exp
-
-# Temportary Orcascript files
-/*.sr*
+*.pbd
+*.usr.opt
+*.xml
