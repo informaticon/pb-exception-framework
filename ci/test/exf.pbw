@@ -1,0 +1,6 @@
+Save Format v3.0(19990112)
+@begin Targets
+ 0 "test_exf.pbt";
+@end;
+DefaultTarget "test_exf.pbt";
+DefaultRemoteTarget "test_exf.pbt";

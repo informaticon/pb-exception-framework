@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_application_adapter from nonvisualobject
 end type
 type st_encrypt_result from structure within u_exf_application_adapter
@@ -934,4 +934,5 @@ pul_exception_server_timeout			= pf_get_setting('exf_server', 'timeout', pul_exc
 pul_exception_server_max_payload_size	= pf_get_setting('exf_server', 'max_payload_size', pul_exception_server_max_payload_size)
 
 end event
+
 

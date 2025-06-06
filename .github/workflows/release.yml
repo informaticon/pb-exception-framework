@@ -1,0 +1,210 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+defaults:
+  run:
+    shell: pwsh
+jobs:
+  build-dll:
+    name: Build exf1.dll
+    uses: ./.github/workflows/build-dll.yml
+    with:
+      pb_arch: "x86"
+      pb_major: "25"
+      build_type: "MinSizeRel"
+  
+  build:
+    name: Build Project
+    needs:
+      - build-dll
+    runs-on: [windows-latest]
+    env:
+      PB_ARCH: "x86"
+      PB_MAJOR: "25"
+      BUILD_TAG: "pb25x86"
+      CMAKE_BUILD_TYPE: "MinSizeRel"
+      PB_COMPILER_URL: ${{ secrets.PB_COMPILER_25_X86_URL }}
+    outputs:
+      analyzer_release_file: ${{ steps.setup_environment.outputs.analyzer_release_file }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        id: setup_environment
+        run: |
+          New-Item -ItemType Directory -Force -Path build
+
+          # ZIP file name
+          $VERSION = "0.0.0-trunk"
+          if ("${{ startsWith(github.ref, 'refs/tags/v') }}" -eq "True") {
+            $VERSION = "${{ github.ref_name }}".TrimStart('v')
+            Write-Host "Tag detected: ${{ github.ref_name }}, using version: $VERSION"
+          } else {
+            Write-Host "No tag detected, using default version: $VERSION"
+          }
+          $exfReleaseFile = "lib.pb.base.exception-framework@${VERSION}+pb${PB_MAJOR}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
+          $analyzerReleaseFile = "dev.win.base.exception-framework@${VERSION}+pb${PB_MAJOR}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
+          echo "EXF_RELEASE_FILE=$exfReleaseFile" >> $env:GITHUB_ENV
+          echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_ENV
+          echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_OUTPUT
+      
+      - name: Setup compiler
+        run: |
+          if (Get-Command "pbautobuild${{ env.PB_MAJOR }}0" -ErrorAction SilentlyContinue) {
+            echo "Use preinstalled PB compiler"
+            echo "PB_COMPILER_EXE=pbautobuild${{ env.PB_MAJOR }}0" >> $env:GITHUB_ENV
+          } else {
+            echo "Download PB compiler"
+            Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}"
+            Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
+            echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbautobuild${{ env.PB_MAJOR }}0.exe" >> $env:GITHUB_ENV
+          }
+      
+      - name: Set Informaticon placeholders
+        env:
+          PS_OAUTH_TOKEN_URL: ${{ secrets.PS_OAUTH_TOKEN_URL }}
+          PS_OAUTH_CLIENT_ID: ${{ secrets.PS_OAUTH_CLIENT_ID }}
+          PS_OAUTH_CLIENT_SECRET: ${{ secrets.PS_OAUTH_CLIENT_SECRET }}
+          PS_OAUTH_SCOPE: ${{ secrets.PS_OAUTH_SCOPE }}
+          PS_EXCEPTION_SERVER_API_KEY: ${{ secrets.PS_EXCEPTION_SERVER_API_KEY }}
+          PS_EXCEPTION_SERVER_URL: ${{ secrets.PS_EXCEPTION_SERVER_URL }}
+        run: |
+          ./ci/replacements.ps1
+
+      - name: Download exf1.dll
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-dll.outputs.artifact_name }}
+          path: .
+
+      - name: Build Tests
+        run: |
+          & "${{ env.PB_COMPILER_EXE }}" /pbc /d "${{ github.workspace }}/test/test_exf.pbproj"
+      
+      - name: Test
+        run: |
+          ./test/test_exf.exe --run-all --quiet
+
+      - name: Zip EXF
+        run: |
+          $FilesToZip = @(
+            "exf1.pbl",
+            "exf1.pbd",
+            "exf1.dll"
+          )
+          Compress-Archive -Path $FilesToZip -DestinationPath ${{ env.EXF_RELEASE_FILE }} -Force
+
+      - name: Upload EXF
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.EXF_RELEASE_FILE }} 
+          path: ${{ env.EXF_RELEASE_FILE }} 
+          if-no-files-found: error
+
+      - name: Build Analyzer
+        run: |
+          & "${{ env.PB_COMPILER_EXE }}" /pbc /d "${{ github.workspace }}/analyzer/exf_analyzer.pbproj"
+      
+      - name: Zip Analyzer
+        run: |
+          $FilesToZip = @(
+            "exf1.pbd",
+            "exf1.dll",
+            "analyzer/exf_analyzer.exe",
+            "analyzer/exf_analyzer.pbd",
+            "analyzer/helper.db",
+            "analyzer/exf_analyzer.ico"
+          )
+          Compress-Archive -Path $FilesToZip -DestinationPath ${{ env.ANALYZER_RELEASE_FILE }} -Force
+      
+      - name: Upload Analyzer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ANALYZER_RELEASE_FILE }} 
+          path: ${{ env.ANALYZER_RELEASE_FILE }} 
+          if-no-files-found: error
+
+  choco-pack:
+    name: Create Chocolatey Package
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/') # Only for tag events
+    runs-on: [windows-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download EXF analyzer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.analyzer_release_file }}
+          path: .
+
+      - name: Prepare EXF analyzer
+        run: | 
+          # EXF Analyzer
+          Expand-Archive -Path "${{ needs.build.outputs.analyzer_release_file }}" -DestinationPath "payload"
+          
+          # PB Runtime
+          Invoke-WebRequest -OutFile "runtime.zip" -Uri "${{ vars.PB_RUNTIME_25_X86_URL }}"
+          Expand-Archive -Path runtime.zip -DestinationPath "payload" -Force
+
+          Compress-Archive -Path payload/* -DestinationPath ci/tools/exf_analyzer.zip
+
+      - name: Prepare nuspec file
+        run: |
+          $xmlDoc = [xml](Get-Content -Path "ci/exf_analyzer.nuspec" -Raw)
+          $xmlDoc.package.metadata.version = "${{ github.ref_name }}".TrimStart("v")
+          $xmlDoc.OuterXml | Set-Content "ci/exf_analyzer.nuspec"
+      
+      - name: Create Chocolatey pakage
+        run: |
+          $NUPKG_RELEASE_FILE = "exf-analyzer.$("${{ github.ref_name }}".TrimStart("v")).nupkg"
+          choco pack ci/exf_analyzer.nuspec
+          echo "NUPKG_RELEASE_FILE=$NUPKG_RELEASE_FILE" >> $env:GITHUB_ENV
+      
+      - name: Upload Chocolatey pakage
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NUPKG_RELEASE_FILE }} 
+          path: ${{ env.NUPKG_RELEASE_FILE }} 
+          if-no-files-found: error
+
+  release:
+    name: Release
+    needs:
+      - build
+      - choco-pack
+    if: startsWith(github.ref, 'refs/tags/') # Only for tag events
+    runs-on: [windows-latest] 
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release-assets
+
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            ./release-assets/*/*.zip
+            ./release-assets/*/*.nupkg
+
+      - name: Create Choco Release
+        run: |
+            Get-ChildItem -Recurse -File -Path ./release-assets/ -Filter *.nupkg | ForEach-Object {
+              choco push $_.FullName --api-key "${{ secrets.GITHUB_TOKEN }}" --source "${{ vars.CHOCO_REGISTRY }}"
+            }
+          

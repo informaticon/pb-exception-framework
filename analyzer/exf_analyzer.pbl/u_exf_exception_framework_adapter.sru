@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_exception_framework_adapter from u_exf_application_adapter
 end type
 end forward
@@ -100,4 +100,7 @@ end on
 on u_exf_exception_framework_adapter.destroy
 call super::destroy
 end on
+
+event constructor;call super::constructor;of_enable_auto_upload(false)
+end event
 

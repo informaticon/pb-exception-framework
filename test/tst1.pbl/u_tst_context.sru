@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_tst_context from nonvisualobject
 end type
 type iu_service from u_tst_service within u_tst_context
@@ -267,4 +267,5 @@ end on
 on iu_service.destroy
 call super::destroy
 end on
+
 

@@ -21,7 +21,7 @@ Please follow these coding conventions:
 
 * We indent using tab characters (not spaces).
 * We always put spaces after list items and method parameters (1, 2, 3, not 1,2,3) and around operators (lu_i += 1, not lu_i+=1).
-* We write names (variables, objects, functions, ...) in camel_case (lbo_show_message, not lboMessageBox).
+* We write names (variables, objects, functions, ...) in snake_case (lbo_show_message, not lboMessageBox).
 * We write keywords and inbuilt names in lowercase (this means, that **everything** is lowercase).
 * We use variable prefixes (ai=argument int, lbo=local boolean, is=public instance string, pu=protected/private instance object, ...).
 * We use function prefixes (of=public function, pf=protected/private function, gf=global function).

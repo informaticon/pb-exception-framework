@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_ex_webrequest from u_exf_ex
 end type
 end forward
@@ -34,4 +34,5 @@ end on
 on u_exf_ex_webrequest.destroy
 call super::destroy
 end on
+
 

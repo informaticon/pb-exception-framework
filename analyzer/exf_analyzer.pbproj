@@ -1,40 +1,9 @@
-﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <Project>
   <Type Name="pb"/>
   <Application Name="exf_analyzer"/>
-  <DeployConfigurations OutputDirectory="Build\bin\$(ConfigurationName)"/>
   <Libraries AppEntry="exf_analyzer.pbl">
     <Library Path="exf_analyzer.pbl"/>
     <Library Path="..\exf1.pbl"/>
   </Libraries>
-  <Sources>
-    <Source Path="exf_analyzer.pbl\d_exf_log.srd"/>
-    <Source Path="exf_analyzer.pbl\exf_analyzer.sra"/>
-    <Source Path="exf_analyzer.pbl\u_exf_db_transaction.sru"/>
-    <Source Path="exf_analyzer.pbl\u_exf_exception_framework_adapter.sru"/>
-    <Source Path="exf_analyzer.pbl\u_exf_log.sru"/>
-    <Source Path="exf_analyzer.pbl\w_exf_analyzer.srw"/>
-    <Source Path="exf_analyzer.pbl\w_exf_error_analyzer.srw"/>
-    <Source Path="exf_analyzer.pbl\w_exf_inputbox.srw"/>
-    <Source Path="..\exf1.pbl\d_exf_keyval_store.srd"/>
-    <Source Path="..\exf1.pbl\u_exf_application_adapter.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_blob.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_error_creator.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_error_data.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_error_manager.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_ex.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_ex_io.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_ex_pbni.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_ex_webrequest.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_database.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_illegalargument.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_invalidstate.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_io.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_notimplemented.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_systemerror.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_serialization.sru"/>
-    <Source Path="..\exf1.pbl\w_exf_error_message.srw"/>
-    <Source Path="..\exf1.pbl\w_exf_send_form.srw"/>
-  </Sources>
 </Project>

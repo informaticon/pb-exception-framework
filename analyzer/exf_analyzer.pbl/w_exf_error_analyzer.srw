@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type w_exf_error_analyzer from w_exf_error_message
 end type
 end forward
@@ -132,4 +132,5 @@ type tv_data from w_exf_error_message`tv_data within w_exf_error_analyzer
 integer y = 832
 integer height = 1952
 end type
+
 

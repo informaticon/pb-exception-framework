@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type exf_analyzer from application
 end type
 global transaction sqlca
@@ -23,8 +23,8 @@ long richtextedittype = 5
 long richtexteditx64type = 5
 long richtexteditversion = 3
 string richtexteditkey = ""
-string appicon = "exf_analyzer_min.ico"
-string appruntimeversion = "25.0.0.3453"
+string appicon = "exf_analyzer.ico"
+string appruntimeversion = "25.0.0.3683"
 boolean manualsession = false
 boolean unsupportedapierror = false
 boolean ultrafast = false
@@ -70,4 +70,5 @@ lu_adapter.of_enable_auto_upload(true)
 
 open(w_exf_analyzer)
 end event
+
 

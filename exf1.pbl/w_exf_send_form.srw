@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type w_exf_send_form from window
 end type
 type st_description_help from statictext within w_exf_send_form
@@ -257,4 +257,5 @@ end type
 
 event modified;pf_check_fields()
 end event
+
 

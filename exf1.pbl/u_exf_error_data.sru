@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_error_data from nonvisualobject
 end type
 end forward
@@ -634,4 +634,5 @@ pds_keyval_store.dataobject = 'd_exf_keyval_store'
 
 this.of_push('error.timestamp', datetime(today(), now()))
 end event
+
 

@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type w_exf_error_message from window
 end type
 type r_gray from rectangle within w_exf_error_message
@@ -828,4 +828,5 @@ if this.getitem(newhandle, tvi_i) = 1 then
 end if
 
 end event
+
 

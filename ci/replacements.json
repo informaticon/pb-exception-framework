@@ -1,0 +1,37 @@
+[
+	{
+	  "FilePath": "analyzer/exf_analyzer.pbl/u_exf_exception_framework_adapter.sru",
+	  "OldString": "protected string ps_oauth_token_url = ''",
+	  "NewString": "protected string ps_oauth_token_url = '{{PS_OAUTH_TOKEN_URL}}'"
+	},
+	{
+	  "FilePath": "analyzer/exf_analyzer.pbl/u_exf_exception_framework_adapter.sru",
+	  "OldString": "protected string ps_oauth_client_id = ''",
+	  "NewString": "protected string ps_oauth_client_id = '{{PS_OAUTH_CLIENT_ID}}'"
+	},
+	{
+	  "FilePath": "analyzer/exf_analyzer.pbl/u_exf_exception_framework_adapter.sru",
+	  "OldString": "protected string ps_oauth_client_id = ''",
+	  "NewString": "protected string ps_oauth_client_id = '{{PS_OAUTH_CLIENT_ID}}'"
+	},
+	{
+	  "FilePath": "analyzer/exf_analyzer.pbl/u_exf_exception_framework_adapter.sru",
+	  "OldString": "protected string ps_oauth_client_secret = ''",
+	  "NewString": "protected string ps_oauth_client_secret = '{{PS_OAUTH_CLIENT_SECRET}}'"
+	},
+	{
+	  "FilePath": "analyzer/exf_analyzer.pbl/u_exf_exception_framework_adapter.sru",
+	  "OldString": "protected string ps_oauth_scope = ''",
+	  "NewString": "protected string ps_oauth_scope = '{{PS_OAUTH_SCOPE}}'"
+	},
+	{
+	  "FilePath": "exf1.pbl/u_exf_application_adapter.sru",
+	  "OldString": "protected string ps_exception_server_api_key = ''",
+	  "NewString": "protected string ps_exception_server_api_key = '{{PS_EXCEPTION_SERVER_API_KEY}}'"
+	},
+	{
+	  "FilePath": "exf1.pbl/u_exf_application_adapter.sru",
+	  "OldString": "protected string ps_exception_server_url = ''",
+	  "NewString": "protected string ps_exception_server_url = '{{PS_EXCEPTION_SERVER_URL}}'"
+	}
+]

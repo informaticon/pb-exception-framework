@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_tst_testcase from nonvisualobject
 end type
 end forward
@@ -58,4 +58,5 @@ for ll_i = 1 to upperbound(lsdf)
 next
 
 end event
+
 

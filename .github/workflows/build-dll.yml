@@ -1,0 +1,94 @@
+name: Build-DLL
+on:
+  workflow_call:
+    inputs:
+      pb_arch:
+        description: "Target architecture (x86 or x64)"
+        required: true
+        default: "x86"
+        type: string
+      pb_major:
+        description: "PowerBuilder version (e.g., 25)"
+        required: true
+        default: "25"
+        type: string
+      build_type:
+        description: "CMake build type (e.g., Release, MinSizeRel, Debug)"
+        required: false
+        default: "MinSizeRel"
+        type: string
+    outputs:
+      artifact_name:
+        description: "The name of the uploaded DLL artifact."
+        value: ${{ jobs.build-dll.outputs.artifact_name }}
+      dll_path:
+        description: "The relative path to the DLL within the artifact."
+        value: ${{ jobs.build-dll.outputs.dll_path }}
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  build-dll:
+    runs-on: [windows-latest]
+    outputs:
+      artifact_name: ${{ steps.setup_environment.outputs.artifact_name }}
+      dll_path: ${{ steps.setup_environment.outputs.dll_relative_path }}
+    env:
+      PB_ARCH: "${{ inputs.pb_arch }}"
+      PB_MAJOR: "${{ inputs.pb_major }}"
+      CMAKE_BUILD_TYPE: "${{ inputs.build_type }}"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        id: setup_environment
+        run: |
+          $ARTIFACT_NAME = "exf1.dll+pb${{ env.PB_MAJOR }}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}".ToLower()
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $env:GITHUB_ENV
+          echo "artifact_name=$ARTIFACT_NAME" >> $env:GITHUB_OUTPUT
+          
+          if ("${{ env.PB_ARCH }}" -eq "x86") {
+            echo "CMAKE_PLATFORM=Win32" >> $env:GITHUB_ENV
+          } else {
+            Write-Error "Other architectures than x86 (e.g. x64) are not yet supported."
+            echo "CMAKE_PLATFORM=x64" >> $env:GITHUB_ENV
+          }
+          
+          # MSVC environment
+          $vsinstall_path = & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere" -latest -property installationPath -nologo -format value
+          $vstoolsversion_path = (Get-ChildItem -Directory -Path (Join-Path $vsinstall_path "VC\Tools\MSVC") | Sort-Object Name -Descending | Select-Object -First 1).FullName
+          $LIB_EXE = Join-Path $vstoolsversion_path "bin\Hostx64\${{ env.PB_ARCH }}\lib.exe"
+          echo "LIB_EXE=$LIB_EXE" >> $env:GITHUB_ENV
+          
+          # Set step output for the DLL relative path
+          echo "dll_relative_path=${{ env.CMAKE_BUILD_TYPE }}/exf1.dll" >> $env:GITHUB_OUTPUT
+
+          New-Item -ItemType Directory -Force -Path "build"
+
+      - name: Prepare CPP input libraries
+        run: |
+          Write-Host "Using LIB.EXE: ${{ env.LIB_EXE }}"
+          Write-Host "Targeting Machine: ${{ env.PB_ARCH }}"
+          & "${{ env.LIB_EXE }}" /def:cpp\lib\pbvm.def /out:build/pbvm.lib /machine:${{ env.PB_ARCH }}
+          & "${{ env.LIB_EXE }}" /def:cpp\lib\pbshr.def /out:build/pbshr.lib /machine:${{ env.PB_ARCH }}
+     
+      - name: Build DLL
+        uses: threeal/cmake-action@725d1314ccf9ea922805d7e3f9d9bcbca892b406 # v2.1.0
+        with:
+          source-dir: cpp
+          build-dir: build
+          options: |
+            CMAKE_GENERATOR_PLATFORM=${{ env.CMAKE_PLATFORM }}
+            BITNESS=${{ env.PB_ARCH }}
+            CMAKE_INSTALL_PREFIX=build
+          build-args: --config ${{ env.CMAKE_BUILD_TYPE }}
+      
+      - name: Upload DLL artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ github.workspace }}/build/${{ env.CMAKE_BUILD_TYPE }}/exf1.dll 
+          if-no-files-found: error

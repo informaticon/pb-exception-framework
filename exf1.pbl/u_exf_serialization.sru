@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_serialization from nonvisualobject
 end type
 end forward
@@ -263,4 +263,5 @@ end on
 
 event constructor;pu_coder = create coderobject
 end event
+
 

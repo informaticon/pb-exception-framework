@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type demo from application
 end type
 global transaction sqlca
@@ -25,7 +25,7 @@ long richtexteditx64type = 5
 long richtexteditversion = 3
 string richtexteditkey = ""
 string appicon = ""
-string appruntimeversion = "25.0.0.3453"
+string appruntimeversion = "25.0.0.3683"
 boolean manualsession = false
 boolean unsupportedapierror = false
 boolean ultrafast = false

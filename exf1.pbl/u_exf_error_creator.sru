@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_error_creator from nonvisualobject
 end type
 end forward
@@ -242,4 +242,5 @@ on u_exf_error_creator.destroy
 TriggerEvent( this, "destructor" )
 call super::destroy
 end on
+
 

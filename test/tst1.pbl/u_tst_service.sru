@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_tst_service from nonvisualobject
 end type
 end forward
@@ -641,4 +641,5 @@ end on
 
 event constructor;
 end event
+
 

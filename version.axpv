@@ -1,0 +1,21 @@
+{
+	"json_format_version": "3.0.0",
+	"package_name": "lib.pb.base.exception-framework",
+	"package_version": null,
+	"created_at": null,
+	"created_by": null,
+	"comment": null,
+	"version_locks": {},
+	"requirements": {
+		"lib.pb.base.network-utils": {
+			"constraint": ">=1.0.0"
+		}
+	},
+	"additional_info": {
+		"powerbuilder_version": "2025R1"
+	},
+	"files": [
+		"exf1.pbl",
+		"exf1.dll"
+	]
+}

@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_ex from exception
 end type
 end forward
@@ -51,4 +51,5 @@ on u_exf_ex.destroy
 TriggerEvent( this, "destructor" )
 call super::destroy
 end on
+
 

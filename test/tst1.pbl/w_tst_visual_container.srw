@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type w_tst_visual_container from window
 end type
 end forward
@@ -64,4 +64,5 @@ for ll_i = 1 to upperbound(pdrg_objs)
 	end if
 next
 end event
+
 

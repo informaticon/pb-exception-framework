@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_log from datawindow
 end type
 end forward
@@ -143,4 +143,5 @@ end on
 
 on u_exf_log.destroy
 end on
+
 

@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_re_database from u_exf_re
 end type
 end forward
@@ -39,4 +39,5 @@ end on
 on u_exf_re_database.destroy
 call super::destroy
 end on
+
 

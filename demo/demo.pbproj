@@ -2,34 +2,8 @@
 <Project>
   <Type Name="pb"/>
   <Application Name="demo"/>
-  <DeployConfigurations OutputDirectory="Build\bin\$(ConfigurationName)"/>
   <Libraries AppEntry="demo.pbl">
     <Library Path="demo.pbl"/>
     <Library Path="..\exf1.pbl"/>
   </Libraries>
-  <Sources>
-    <Source Path="demo.pbl\demo.sra"/>
-    <Source Path="demo.pbl\w_demo_main.srw"/>
-    <Source Path="demo.pbl\u_demo_exf_adapter.sru"/>
-    <Source Path="..\exf1.pbl\d_exf_keyval_store.srd"/>
-    <Source Path="..\exf1.pbl\u_exf_application_adapter.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_blob.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_error_creator.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_error_data.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_error_manager.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_ex.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_ex_io.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_ex_pbni.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_ex_webrequest.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_database.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_illegalargument.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_invalidstate.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_io.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_notimplemented.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_re_systemerror.sru"/>
-    <Source Path="..\exf1.pbl\u_exf_serialization.sru"/>
-    <Source Path="..\exf1.pbl\w_exf_error_message.srw"/>
-    <Source Path="..\exf1.pbl\w_exf_send_form.srw"/>
-  </Sources>
 </Project>

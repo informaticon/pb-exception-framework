@@ -1,24 +1,23 @@
 # Informaticon Exception Framework
 
 Informaticon Exception Framework (EXF) helps to streamline the management of exceptions/runtimeerrors in PowerBuilder.
-In this documentation, the term "exception" is used to describe exceptions as well as runtimeerrors.
+In this documentation, the term "exception" is used to describe both exceptions and runtimeerrors.
 
 ## Features
-
 * Simplified exception creation
-* Meaningful and userfriendly error messages
-* Additional error types which allow to store arbitrary data (context information)
+* Meaningful and user-friendly error messages
+* Additional error types to store arbitrary data (context information)
 * Automatic stack trace determination
 * Serialisation and deserialisation of exceptions
+* Error analysis using EXF Analyzer
 
 ## Screenshot
 
 ![Screenshot](docs/assets/screenshot.png)
 
 ## Usage
-
-You can find a more detailed documentation in German [here](docs/RADME.md).  
-To use the exception framework, you have to instantiate it globally in your application object:
+A more detailed documentation in German can be found [here](docs/RADME.md).
+To use the Exception Framework, you must instantiate it globally in your application object:
 
 ```powerbuilder
 // Global variables
@@ -28,16 +27,15 @@ u_exf_error_manager gu_e
 gu_e = create u_exf_error_manager
 ```
 
-### Throwing an exception
+### Throwing exceptions
 
 ```powerbuilder
 throw(gu_e.iu_as.of_ex(gu_e.of_new_error('Connection timed out')))
 ```
 
-### Add context
+### Adding context
 
-You can store every possible value in an exception.
-Some are automatically serialised, for others you have to extend `u_exf_application_adapter.of_parse_to_blob()`.
+You can store any kind of value in an exception. Some are serialised automatically, for others you have to extend `u_exf_application_adapter.of_parse_to_blob()` or to program the object's `of_to_string()` function.
 
 ```powerbuilder
 datastore lds
@@ -52,7 +50,7 @@ throw(gu_e.iu_as.of_ex(gu_e.of_new_error('Connection timed out') &
 ))
 ```
 
-### Catch and display an exception
+### Displaying exceptions
 
 ```powerbuilder
 try
@@ -65,7 +63,7 @@ end try
 ### Translation / Customisation
 
 The idea is not to change EXF classes directly, but to use an adapter object to override certain behaviour.
-For this, you have to implement an adapter class derived from `u_exf_application_adapter` and register it during application startup:
+To do this, you need to implement an adapter class derived from `u_exf_application_adapter` and register it during application startup:
 
 ```powerbuilder
 // open() event, after gu_e = create u_exf_error_manager
@@ -75,7 +73,8 @@ lu_adapter = create u_demo_exf_adapter
 gu_e.of_set_app_adapter(lu_adapter)
 ```
 
-There are several predefined functions which you can override, the most important are:
+
+There are several predefined functions that you can override, the most important are:
 
 | function | purpose |
 | ------------- | ------------- |
@@ -106,29 +105,32 @@ red=unchecked exceptions (aka runtime errors)
 | u_exf_re_notimplemented | For the implementation of abstract classes (e.g. you want to force the developer to overwrite a certain function and therefore throw such an unchecked exception in the base class) |
 | u_exf_re_systemerror | Should only be thrown in the application's systemerror event |
 
+## EXF Analyzer
+With the help of the Exception Framework, error analysis capabilities are greatly improved thanks to context information and exception nesting.
+Data required for error analysis can be saved in the exception and displayed elsewhere in your software.
+
+The aim of the "EXF Analyzer" is to enable supporters/developers to analyse the context information retrospectively and to help debugging database errors that happended at runtime.
+Exceptions that occured at runtime can be stored using the save button and later loaded into EXF Analyzer (Load from file).
+
+![screenshot of exf analyzer](docs/assets/exf-analyzer_screenshot.png)
+
 ## How to build
 
 ### Requirements
-* PowerBuilder Compiler (pbcXXX.exe / PBAutoBuild250.exe))
-* Make ([direct download](https://gnuwin32.sourceforge.net/packages/make.htm) or via [choco](https://community.chocolatey.org/packages/make))
-* CMake ([direct download](https://cmake.org/download/) or via [choco](https://community.chocolatey.org/packages/cmake))
-* Microsoft Visual C++ Build Tools (e.g. from [MS Visual Studio 2022 Community Edition](https://visualstudio.microsoft.com/de/vs/community/))
-* pbmanager (not open source (yet), needed to convert PB Solution to PB <= 22.2)
-
-### Tasks
-
-Just open a console at the root folder of this project and run `make build`.
-
-You can choose the PB compiler version by setting the PB_RUNTIME variable:
-
-```powershell
-make build PB_RUNTIME=22.2.0.3356
-```
+Most of the build requirements can be installed using [choco](https://community.chocolatey.org/packages/make).
+* Build tools (if you don't want to build manually)
+    * Make (`choco install make`)
+    * act (`choco install act-cli`)
+* PowerBuilder
+    * PowerBuilder Compiler (pbcXXX.exe / PBAutoBuild250.exe)
+    * pbmanager (needed to convert PB Solution to PB 2022R3, can be downloaded from there: https://github.com/informaticon/win-pbmanager)
+* DLL
+    * CMake (`choco install cmake`)
+    * Microsoft Visual C++ Build Tools (e.g. from [MS Visual Studio 2022 Community Edition](https://visualstudio.microsoft.com/de/vs/community/))
 
 ## How to contribute
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) before sending a pull request.
-
 
 ## Related work
 

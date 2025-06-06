@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_tst_stringarray from nonvisualobject
 end type
 end forward
@@ -40,4 +40,5 @@ on u_tst_stringarray.destroy
 TriggerEvent( this, "destructor" )
 call super::destroy
 end on
+
 

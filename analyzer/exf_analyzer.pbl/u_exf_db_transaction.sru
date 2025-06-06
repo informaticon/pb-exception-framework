@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_db_transaction from transaction
 end type
 end forward
@@ -72,4 +72,5 @@ end event
 
 event constructor;ibo_abort_dbactions = true
 end event
+
 

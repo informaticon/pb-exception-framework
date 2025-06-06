@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_re_illegalargument from u_exf_re
 end type
 end forward
@@ -14,4 +14,5 @@ end on
 on u_exf_re_illegalargument.destroy
 call super::destroy
 end on
+
 

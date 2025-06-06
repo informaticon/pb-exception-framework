@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type w_exf_analyzer from window
 end type
 type cb_fire_update_statement from commandbutton within w_exf_analyzer
@@ -56,7 +56,7 @@ boolean controlmenu = true
 boolean minbox = true
 boolean maxbox = true
 long backcolor = 67108864
-string icon = "exf_analyzer_min.ico"
+string icon = "exf_analyzer.ico"
 boolean center = true
 event ue_show ( any aa_data )
 cb_fire_update_statement cb_fire_update_statement
@@ -759,4 +759,5 @@ cb_show_sql_select.show()
 cb_show_data.show()
 cb_show_update_statement.show()
 end event
+
 

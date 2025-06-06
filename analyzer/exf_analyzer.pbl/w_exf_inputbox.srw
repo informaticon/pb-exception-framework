@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type w_exf_inputbox from window
 end type
 type cb_cancel from commandbutton within w_exf_inputbox
@@ -108,4 +108,5 @@ end type
 
 event clicked;closewithreturn(parent, sle_input.text)
 end event
+
 

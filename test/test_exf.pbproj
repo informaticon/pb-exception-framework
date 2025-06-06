@@ -3,17 +3,17 @@
   <Type Name="pb"/>
   <Application Name="test_exf"/>
   <DeployConfigurations OutputDirectory="Build\bin\$(ConfigurationName)"/>
-  <Libraries AppEntry="test_exf1.pbl">
-    <Library Path="test_exf1.pbl"/>
+  <Libraries AppEntry="test_exf.pbl">
+    <Library Path="test_exf.pbl"/>
     <Library Path="..\exf1.pbl"/>
     <Library Path="tst1.pbl"/>
   </Libraries>
   <Sources>
-    <Source Path="test_exf1.pbl\test_exf.sra"/>
-    <Source Path="test_exf1.pbl\d_temp.srd"/>
-    <Source Path="test_exf1.pbl\t_exf_error_data.sru"/>
-    <Source Path="test_exf1.pbl\t_exf_error_manager.sru"/>
-    <Source Path="test_exf1.pbl\t_exf_exception_serialization.sru"/>
+    <Source Path="test_exf.pbl\test_exf.sra"/>
+    <Source Path="test_exf.pbl\d_temp.srd"/>
+    <Source Path="test_exf.pbl\t_exf_error_data.sru"/>
+    <Source Path="test_exf.pbl\t_exf_error_manager.sru"/>
+    <Source Path="test_exf.pbl\t_exf_exception_serialization.sru"/>
     <Source Path="..\exf1.pbl\d_exf_keyval_store.srd"/>
     <Source Path="..\exf1.pbl\u_exf_application_adapter.sru"/>
     <Source Path="..\exf1.pbl\u_exf_blob.sru"/>

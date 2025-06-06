@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type w_tst_testframework from window
 end type
 type dw_testcase from datawindow within w_tst_testframework
@@ -522,4 +522,5 @@ else
 	return ancestorreturnvalue
 end if
 end event
+
 

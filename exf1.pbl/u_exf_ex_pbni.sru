@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_ex_pbni from u_exf_ex
 end type
 end forward
@@ -70,4 +70,5 @@ event constructor;call super::constructor;// 2022-08-16 Micha Wehrli: Exception 
 // Im Gegensatz zu anderen Exceptions gibt es im u_exf_error_creater bewusst keine korresponidierende
 // creater Funktion, weil u_exf_ex_pbni darf nur aus einer PBNI Extension heraus instanziiert werden.
 end event
+
 

@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_tst_systeminfo from nonvisualobject
 end type
 type st_process_memory_counters from structure within u_tst_systeminfo
@@ -64,4 +64,5 @@ on u_tst_systeminfo.destroy
 TriggerEvent( this, "destructor" )
 call super::destroy
 end on
+
 

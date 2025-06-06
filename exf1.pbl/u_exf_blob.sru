@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_blob from nonvisualobject
 end type
 end forward
@@ -94,4 +94,5 @@ event constructor;//Zweck		Blob-Objekt
 //Erstellt 2020-11-16 Simon Reichenbach	Ticket 15230
 
 end event
+
 

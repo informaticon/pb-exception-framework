@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_tst_win32_api from nonvisualobject
 end type
 end forward
@@ -98,4 +98,5 @@ event destructor;if of_is_console_connected() then
 end if
 
 end event
+
 

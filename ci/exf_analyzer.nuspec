@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>exf-analyzer</id>
+    <version>0.0.0-trunk</version>
+    <packageSourceUrl>https://git.informaticon.com/informaticon/lib.pb.base.exception-framework</packageSourceUrl>
+    <title>EXF Analyzer</title>
+    <authors>Simon Jutzi</authors>
+    <owners>Simon Jutzi</owners>
+    <projectUrl>https://slab.informaticon.com/posts/kurzanleitung-exf-analyzer-kfa2kc7i</projectUrl>
+    <iconUrl>https://choco.informaticon.com/endpoints/Icons/content/exf-analyzer.png</iconUrl>
+    <copyright>Informaticon AG</copyright>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <tags>exception framework powerbuilder analysis bug support</tags>
+    <summary>A3 Exception Analyzer</summary>
+    <dependencies>
+      <dependency id="vcredist140" />
+    </dependencies>
+    <description>Helper application to analyze PowerBuilder exceptions.
+
+Can download and display exceptions from the Informaticon Exception Server.
+Newer A3 versions automatically upload error messages to this server and display an exception ID (e.g. `20230120_152127_19110`) and exception key (e.g. `76800CC3A105`) in the error message.
+
+See https://slab.informaticon.com/posts/kurzanleitung-exf-analyzer-kfa2kc7i for further information.
+
+Screenshot:
+![Screenshot](https://choco.informaticon.com/endpoints/Icons/content/screenshots/exf_analyzer.png)
+    </description>
+    <releaseNotes>
+    </releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

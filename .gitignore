@@ -5,3 +5,4 @@ build
 *.pbd
 *.usr.opt
 *.xml
+.env

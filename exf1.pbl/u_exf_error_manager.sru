@@ -1,4 +1,4 @@
-﻿forward
+forward
 global type u_exf_error_manager from nonvisualobject
 end type
 type st_encrypt_result from structure within u_exf_error_manager
@@ -419,4 +419,5 @@ event ue_register_error;call super::ue_register_error;//Zweck		Wird immer dann a
 
 pu_last_error = au_error
 end event
+
 
