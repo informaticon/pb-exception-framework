@@ -15,6 +15,11 @@ jobs:
       pb_arch: "x86"
       pb_major: "25"
       build_type: "MinSizeRel"
+
+  backport:
+    name: Backport to pb2022r3
+    uses: ./.github/workflows/backport.yml
+    secrets: inherit
   
   build:
     name: Build Project
@@ -24,9 +29,8 @@ jobs:
     env:
       PB_ARCH: "x86"
       PB_MAJOR: "25"
-      BUILD_TAG: "pb25x86"
       CMAKE_BUILD_TYPE: "MinSizeRel"
-      PB_COMPILER_URL: ${{ secrets.PB_COMPILER_25_X86_URL }}
+      PB_COMPILER_URL: ${{ vars.PB_COMPILER_25_X86_URL }}
     outputs:
       analyzer_release_file: ${{ steps.setup_environment.outputs.analyzer_release_file }}
     steps:
@@ -46,7 +50,7 @@ jobs:
           } else {
             Write-Host "No tag detected, using default version: $VERSION"
           }
-          $exfReleaseFile = "lib.pb.base.exception-framework@${VERSION}+pb${PB_MAJOR}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
+          $exfReleaseFile = "lib.pb.base.exception-framework@${VERSION}+pb${{ env.PB_MAJOR }}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
           $analyzerReleaseFile = "dev.win.base.exception-framework@${VERSION}+pb${PB_MAJOR}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
           echo "EXF_RELEASE_FILE=$exfReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_ENV
@@ -59,19 +63,19 @@ jobs:
             echo "PB_COMPILER_EXE=pbautobuild${{ env.PB_MAJOR }}0" >> $env:GITHUB_ENV
           } else {
             echo "Download PB compiler"
-            Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}"
+            Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_TOKEN_READ_ASSETS }}"}
             Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
             echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbautobuild${{ env.PB_MAJOR }}0.exe" >> $env:GITHUB_ENV
           }
       
       - name: Set Informaticon placeholders
         env:
-          PS_OAUTH_TOKEN_URL: ${{ secrets.PS_OAUTH_TOKEN_URL }}
-          PS_OAUTH_CLIENT_ID: ${{ secrets.PS_OAUTH_CLIENT_ID }}
+          PS_OAUTH_TOKEN_URL: ${{ vars.PS_OAUTH_TOKEN_URL }}
+          PS_OAUTH_CLIENT_ID: ${{ vars.PS_OAUTH_CLIENT_ID }}
           PS_OAUTH_CLIENT_SECRET: ${{ secrets.PS_OAUTH_CLIENT_SECRET }}
-          PS_OAUTH_SCOPE: ${{ secrets.PS_OAUTH_SCOPE }}
+          PS_OAUTH_SCOPE: ${{ vars.PS_OAUTH_SCOPE }}
           PS_EXCEPTION_SERVER_API_KEY: ${{ secrets.PS_EXCEPTION_SERVER_API_KEY }}
-          PS_EXCEPTION_SERVER_URL: ${{ secrets.PS_EXCEPTION_SERVER_URL }}
+          PS_EXCEPTION_SERVER_URL: ${{ vars.PS_EXCEPTION_SERVER_URL }}
         run: |
           ./ci/replacements.ps1
 
@@ -149,7 +153,7 @@ jobs:
           Expand-Archive -Path "${{ needs.build.outputs.analyzer_release_file }}" -DestinationPath "payload"
           
           # PB Runtime
-          Invoke-WebRequest -OutFile "runtime.zip" -Uri "${{ vars.PB_RUNTIME_25_X86_URL }}"
+          Invoke-WebRequest -OutFile "runtime.zip" -Uri "${{ vars.PB_PBDK_2025R1_X86_URL }}"
           Expand-Archive -Path runtime.zip -DestinationPath "payload" -Force
 
           Compress-Archive -Path payload/* -DestinationPath ci/tools/exf_analyzer.zip
@@ -178,6 +182,7 @@ jobs:
     needs:
       - build
       - choco-pack
+      - backport
     if: startsWith(github.ref, 'refs/tags/') # Only for tag events
     runs-on: [windows-latest] 
     permissions:
@@ -191,6 +196,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./release-assets
+
+      - run: |
+          tree /F /A release-assets
 
       - name: Create Github Release
         uses: softprops/action-gh-release@v2

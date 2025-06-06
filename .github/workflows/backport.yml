@@ -1,0 +1,108 @@
+name: Backport
+on:
+  workflow_call:
+  workflow_dispatch:
+defaults:
+  run:
+    shell: pwsh
+jobs:
+  build-dll:
+    name: Build exf1.dll
+    uses: ./.github/workflows/build-dll.yml
+    with:
+      pb_arch: "x86"
+      pb_major: "22"
+      build_type: "MinSizeRel"
+    
+  backport-pb2022r3:
+    runs-on: [windows-latest]
+    needs:
+      - build-dll
+    env:
+      PB_ARCH: "x86"
+      PB_MAJOR: "22"
+      CMAKE_BUILD_TYPE: "MinSizeRel"
+      PB_COMPILER_URL: ${{ vars.PB_COMPILER_22_X86_URL }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        id: setup_environment
+        run: |
+          # ZIP file name
+          $VERSION = "0.0.0-trunk"
+          if ("${{ startsWith(github.ref, 'refs/tags/v') }}" -eq "True") {
+            $VERSION = "${{ github.ref_name }}".TrimStart('v')
+            Write-Host "Tag detected: ${{ github.ref_name }}, using version: $VERSION"
+          } else {
+            Write-Host "No tag detected, using default version: $VERSION"
+          }
+          $exfReleaseFile = "lib.pb.base.exception-framework@${VERSION}+pb${{ env.PB_MAJOR }}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
+          echo "EXF_RELEASE_FILE=$exfReleaseFile" >> $env:GITHUB_ENV
+      
+      - name: Setup compiler
+        run: |
+          if (Get-Command "pbc${{ env.PB_MAJOR }}0" -ErrorAction SilentlyContinue) {
+            echo "Use preinstalled PB compiler"
+            echo "PB_COMPILER_EXE=pbc${{ env.PB_MAJOR }}0" >> $env:GITHUB_ENV
+          } else {
+            echo "Download PB compiler"
+            Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_TOKEN_READ_ASSETS }}"}
+            Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
+            echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbc${{ env.PB_MAJOR }}0.exe" >> $env:GITHUB_ENV
+          }
+      
+      - name: Set Informaticon placeholders
+        env:
+          PS_OAUTH_TOKEN_URL: ${{ secrets.PS_OAUTH_TOKEN_URL }}
+          PS_OAUTH_CLIENT_ID: ${{ secrets.PS_OAUTH_CLIENT_ID }}
+          PS_OAUTH_CLIENT_SECRET: ${{ secrets.PS_OAUTH_CLIENT_SECRET }}
+          PS_OAUTH_SCOPE: ${{ secrets.PS_OAUTH_SCOPE }}
+          PS_EXCEPTION_SERVER_API_KEY: ${{ secrets.PS_EXCEPTION_SERVER_API_KEY }}
+          PS_EXCEPTION_SERVER_URL: ${{ vars.PS_EXCEPTION_SERVER_URL }}
+        run: |
+          ./ci/replacements.ps1
+
+      - name: Download exf1.dll
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-dll.outputs.artifact_name }}
+          path: .
+      
+      - name: Backport
+        run: |
+          # Prepare work folder
+          New-Item -ItemType Directory -Force -Path ./build/pb2022r3
+          Copy-Item -Path "./ci/test/*" -Destination "./build/pb2022r3" -Recurse -Force
+
+        
+          # Get pbmanager
+          Invoke-WebRequest -OutFile "pbmanager.exe" -Uri "${{ vars.PB_PBMANAGER_URL }}"
+
+          ./pbmanager.exe import --orca-runtime "${{ github.workspace }}/compiler" -b ./build/pb2022r3 -t test_exf.pbt -p tst1,exf1,test_exf  ../../test ../..
+      
+      - name: Compile
+        run: |
+          & "${{ env.PB_COMPILER_EXE }}" /d "${{ github.workspace }}\build\pb2022r3\test_exf.pbt"
+        
+      - name: Test
+        run: |
+          .\build\pb2022r3\test_exf.exe --run-all --quiet
+
+      - name: Zip EXF
+        run: |
+          $FilesToZip = @(
+            "build/pb2022r3/exf1.pbl",
+            "build/pb2022r3/exf1.pbd",
+            "exf1.dll"
+          )
+          Compress-Archive -Path $FilesToZip -DestinationPath ${{ env.EXF_RELEASE_FILE }} -Force
+
+      - name: Upload EXF
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.EXF_RELEASE_FILE }} 
+          path: ${{ env.EXF_RELEASE_FILE }} 
+          if-no-files-found: error
+
