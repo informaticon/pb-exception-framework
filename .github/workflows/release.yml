@@ -177,6 +177,19 @@ jobs:
           path: ${{ env.NUPKG_RELEASE_FILE }} 
           if-no-files-found: error
 
+  axp-pack:
+    name: Create axpd Package
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/') && 
+      github.repository == 'informaticon/lib.pb.base.exception-framework'
+    runs-on: [windows, self-hosted]
+    # self-hosted for package signing
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # TODO
+  
   release:
     name: Release
     needs:
@@ -209,8 +222,10 @@ jobs:
           files: |
             ./release-assets/*/*.zip
             ./release-assets/*/*.nupkg
+            ./release-assets/*/*.axpd
 
       - name: Create Choco Release
+        if: github.repository == 'informaticon/lib.pb.base.exception-framework'
         run: |
             Get-ChildItem -Recurse -File -Path ./release-assets/ -Filter *.nupkg | ForEach-Object {
               choco push $_.FullName --api-key "${{ secrets.GITHUB_TOKEN }}" --source "${{ vars.CHOCO_REGISTRY }}"
