@@ -1,0 +1,28 @@
+name: Mirror commits to public repo
+on:
+  push:
+    branches:
+      - main
+jobs:
+  commits:
+    runs-on: [windows-latest]
+
+    steps:
+      - name: Pull
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH Key
+        uses: webfactory/ssh-agent@a6f90b1f127823b31d4d4a8d96047790581349bd # v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.PUBLIC_MIRROR_PRIVATE_SSH_KEY }}
+
+      - name: Set Remote
+        continue-on-error: true # sometimes the remote is already there, in which case this errors
+        run: git remote add public git@github.com:informaticon/cpp-pbni-framework.git
+
+      - name: Push
+        run: |
+          git push public main
+          git push public main --tags
