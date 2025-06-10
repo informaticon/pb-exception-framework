@@ -20,7 +20,7 @@ jobs:
 
       - name: Set Remote
         continue-on-error: true # sometimes the remote is already there, in which case this errors
-        run: git remote add public git@github.com:informaticon/cpp-pbni-framework.git
+        run: git remote add public git@github.com:${{ github.repository }}.git
 
       - name: Push
         run: |
