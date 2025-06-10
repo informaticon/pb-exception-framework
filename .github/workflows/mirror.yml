@@ -4,9 +4,9 @@ on:
     branches:
       - main
 jobs:
-  commits:
-    runs-on: [windows-latest]
-
+  mirror:
+    runs-on: [ubuntu-latest]
+    if: github.event.repository.visibility == 'private' # only run on private repo
     steps:
       - name: Pull
         uses: actions/checkout@v3
@@ -20,7 +20,7 @@ jobs:
 
       - name: Set Remote
         continue-on-error: true # sometimes the remote is already there, in which case this errors
-        run: git remote add public git@github.com:${{ github.repository }}.git
+        run: git remote add public "git@github.com:$("${{ github.repository }}".split(".")[1])-$("${{ github.repository }}".split(".")[3]).git"
 
       - name: Push
         run: |
