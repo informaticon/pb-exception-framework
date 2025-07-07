@@ -1,4 +1,8 @@
-SHELL := pwsh.exe
+ifeq ($(OS),Windows_NT)
+	SHELL := pwsh.exe
+else
+	SHELL := pwsh
+endif
 .SHELLFLAGS := -Command
 
 .PHONY: build

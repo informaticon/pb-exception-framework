@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Project>
+  <Type Name="pb" />
+  <Application Name="test_exf" />
+  <DeployConfigurations OutputDirectory="Build\bin\$(ConfigurationName)" />
+  <Libraries AppEntry="test\test_exf.pbl">
+    <Library Path="test\test_exf.pbl" />
+    <Library Path="exf1.pbl" />
+    <Library Path="test\tst1.pbl" />
+  </Libraries>
+</Project>

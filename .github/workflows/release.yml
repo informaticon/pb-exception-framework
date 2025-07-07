@@ -2,7 +2,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
 defaults:
   run:
@@ -20,7 +20,7 @@ jobs:
     name: Backport to pb2022r3
     uses: ./.github/workflows/backport.yml
     secrets: inherit
-  
+
   build:
     name: Build Project
     needs:
@@ -55,7 +55,7 @@ jobs:
           echo "EXF_RELEASE_FILE=$exfReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_OUTPUT
-      
+
       - name: Setup compiler
         run: |
           if (Get-Command "pbautobuild${{ env.PB_MAJOR }}0" -ErrorAction SilentlyContinue) {
@@ -67,7 +67,7 @@ jobs:
             Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
             echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbautobuild${{ env.PB_MAJOR }}0.exe" >> $env:GITHUB_ENV
           }
-      
+
       - name: Set Informaticon placeholders
         env:
           PS_OAUTH_TOKEN_URL: ${{ vars.PS_OAUTH_TOKEN_URL }}
@@ -87,8 +87,8 @@ jobs:
 
       - name: Build Tests
         run: |
-          & "${{ env.PB_COMPILER_EXE }}" /pbc /d "${{ github.workspace }}/test/test_exf.pbproj"
-      
+          & "${{ env.PB_COMPILER_EXE }}" /pbc /d "${{ github.workspace }}/lib.pb.exception-framework.pbproj"
+
       - name: Test
         run: |
           ./test/test_exf.exe --run-all --quiet
@@ -105,14 +105,14 @@ jobs:
       - name: Upload EXF
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.EXF_RELEASE_FILE }} 
-          path: ${{ env.EXF_RELEASE_FILE }} 
+          name: ${{ env.EXF_RELEASE_FILE }}
+          path: ${{ env.EXF_RELEASE_FILE }}
           if-no-files-found: error
 
       - name: Build Analyzer
         run: |
           & "${{ env.PB_COMPILER_EXE }}" /pbc /d "${{ github.workspace }}/analyzer/exf_analyzer.pbproj"
-      
+
       - name: Zip Analyzer
         run: |
           $FilesToZip = @(
@@ -124,12 +124,12 @@ jobs:
             "analyzer/exf_analyzer.ico"
           )
           Compress-Archive -Path $FilesToZip -DestinationPath ${{ env.ANALYZER_RELEASE_FILE }} -Force
-      
+
       - name: Upload Analyzer
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ANALYZER_RELEASE_FILE }} 
-          path: ${{ env.ANALYZER_RELEASE_FILE }} 
+          name: ${{ env.ANALYZER_RELEASE_FILE }}
+          path: ${{ env.ANALYZER_RELEASE_FILE }}
           if-no-files-found: error
 
   choco-pack:
@@ -140,7 +140,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Download EXF analyzer artifact
         uses: actions/download-artifact@v4
         with:
@@ -148,10 +148,10 @@ jobs:
           path: .
 
       - name: Prepare EXF analyzer
-        run: | 
+        run: |
           # EXF Analyzer
           Expand-Archive -Path "${{ needs.build.outputs.analyzer_release_file }}" -DestinationPath "payload"
-          
+
           # PB Runtime
           Invoke-WebRequest -OutFile "runtime.zip" -Uri "${{ vars.PB_PBDK_2025R1_X86_URL }}"
           Expand-Archive -Path runtime.zip -DestinationPath "payload" -Force
@@ -163,33 +163,33 @@ jobs:
           $xmlDoc = [xml](Get-Content -Path "ci/exf_analyzer.nuspec" -Raw)
           $xmlDoc.package.metadata.version = "${{ github.ref_name }}".TrimStart("v")
           $xmlDoc.OuterXml | Set-Content "ci/exf_analyzer.nuspec"
-      
+
       - name: Create Chocolatey pakage
         run: |
           $NUPKG_RELEASE_FILE = "exf-analyzer.$("${{ github.ref_name }}".TrimStart("v")).nupkg"
           choco pack ci/exf_analyzer.nuspec
           echo "NUPKG_RELEASE_FILE=$NUPKG_RELEASE_FILE" >> $env:GITHUB_ENV
-      
+
       - name: Upload Chocolatey pakage
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.NUPKG_RELEASE_FILE }} 
-          path: ${{ env.NUPKG_RELEASE_FILE }} 
+          name: ${{ env.NUPKG_RELEASE_FILE }}
+          path: ${{ env.NUPKG_RELEASE_FILE }}
           if-no-files-found: error
 
   axp-pack:
     name: Create axpd Package
     needs: build
-    if: startsWith(github.ref, 'refs/tags/') && 
+    if: startsWith(github.ref, 'refs/tags/') &&
       github.repository == 'informaticon/lib.pb.base.exception-framework'
     runs-on: [windows, self-hosted]
     # self-hosted for package signing
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       # TODO
-  
+
   release:
     name: Release
     needs:
@@ -197,7 +197,7 @@ jobs:
       - choco-pack
       - backport
     if: startsWith(github.ref, 'refs/tags/') # Only for tag events
-    runs-on: [windows-latest] 
+    runs-on: [windows-latest]
     permissions:
       contents: write
       packages: write
@@ -227,7 +227,6 @@ jobs:
       - name: Create Choco Release
         if: github.repository == 'informaticon/lib.pb.base.exception-framework'
         run: |
-            Get-ChildItem -Recurse -File -Path ./release-assets/ -Filter *.nupkg | ForEach-Object {
-              choco push $_.FullName --api-key "${{ secrets.GITHUB_TOKEN }}" --source "${{ vars.CHOCO_REGISTRY }}"
-            }
-          
+          Get-ChildItem -Recurse -File -Path ./release-assets/ -Filter *.nupkg | ForEach-Object {
+            choco push $_.FullName --api-key "${{ secrets.GITHUB_TOKEN }}" --source "${{ vars.CHOCO_REGISTRY }}"
+          }
