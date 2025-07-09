@@ -23,7 +23,7 @@ void set_string(vm_state *vm, wchar_t *source, value *val) {
 	if (!(val->flags & IS_NULL))
 		ot_free_val_ptr(vm, val);
 
-	val->value = (DWORD)dest;
+	val->value = dest;
 	val->flags = 0x0d00;
 	val->type = pbvalue_string;
 }
@@ -71,7 +71,7 @@ DWORD __declspec(dllexport) __stdcall get_stacktrace(vm_state *vm, DWORD arg_cou
 	value ret{};
 	lvalue_ref *lv_values;
 	callback_state state{};
-	DWORD isnull;
+	PVOID isnull;
 
 	last_vm = vm;
 
@@ -83,8 +83,8 @@ DWORD __declspec(dllexport) __stdcall get_stacktrace(vm_state *vm, DWORD arg_cou
 	state.trace = NULL;
 	state.group_name = NULL;
 
-	ret.value = shlist_traversal(GET_STACKLIST(vm), &state, callback);
-	ret.type = 7;
+	ret.value = (PVOID) shlist_traversal(GET_STACKLIST(vm), &state, callback);
+	ret.type = 7; // boolean
 	ret.flags = 0x0500;
 
 	current_stack_info *csti = ob_get_current_stack_location(vm);

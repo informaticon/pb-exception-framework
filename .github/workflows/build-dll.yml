@@ -52,9 +52,11 @@ jobs:
           
           if ("${{ env.PB_ARCH }}" -eq "x86") {
             echo "CMAKE_PLATFORM=Win32" >> $env:GITHUB_ENV
-          } else {
-            Write-Error "Other architectures than x86 (e.g. x64) are not yet supported."
+          } elseif ("${{ env.PB_ARCH }}" -eq "x64") {
             echo "CMAKE_PLATFORM=x64" >> $env:GITHUB_ENV
+          } else {
+            Write-Error "Other architectures than x86 and x64 are not yet supported."
+            exit 1
           }
           
           # MSVC environment
@@ -72,8 +74,8 @@ jobs:
         run: |
           Write-Host "Using LIB.EXE: ${{ env.LIB_EXE }}"
           Write-Host "Targeting Machine: ${{ env.PB_ARCH }}"
-          & "${{ env.LIB_EXE }}" /def:cpp\lib\pbvm.def /out:build/pbvm.lib /machine:${{ env.PB_ARCH }}
-          & "${{ env.LIB_EXE }}" /def:cpp\lib\pbshr.def /out:build/pbshr.lib /machine:${{ env.PB_ARCH }}
+          & "${{ env.LIB_EXE }}" /def:cpp\lib\pbvm_${{ env.PB_ARCH }}.def /out:build/pbvm.lib /machine:${{ env.PB_ARCH }}
+          & "${{ env.LIB_EXE }}" /def:cpp\lib\pbshr_${{ env.PB_ARCH }}.def /out:build/pbshr.lib /machine:${{ env.PB_ARCH }}
      
       - name: Build DLL
         uses: threeal/cmake-action@725d1314ccf9ea922805d7e3f9d9bcbca892b406 # v2.1.0

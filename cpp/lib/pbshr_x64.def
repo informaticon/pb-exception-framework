@@ -1,0 +1,5 @@
+LIBRARY	"pbshr.dll"
+EXPORTS
+?shlist_traversal@@YA_NPEAX0P6A_NPEAUstack_info@@0@Z@Z @224
+?pbstg_alc@@YAPEAXPEAUvm_state@@HPEAX@Z @5
+?pbstg_fee@@YAXPEAUvm_state@@PEAX@Z @6

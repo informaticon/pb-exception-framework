@@ -1,0 +1,14 @@
+LIBRARY	"pbvm.dll"
+EXPORTS
+?ot_free_val_ptr@@YGXPAUvm_state@@PAUvalue@@@Z @1214
+?ot_array_index@@YGPAUvalue@@PAUvm_state@@PAUpb_array@@H@Z @1512
+?ob_get_group_name@@YGPA_WPAUvm_state@@F@Z @1127
+?ob_class_name_not_indirect@@YGPA_WPAUvm_state@@H@Z @1581
+?ob_group_data_srch@@YGPAUgroup_data@@PAUvm_state@@F@Z @966
+?ob_get_class_entry@@YGPAUclass_data@@PAUvm_state@@PAPAUgroup_data@@F@Z @1102
+?ob_event_module_name@@YGPA_WPAUvm_state@@PAUgroup_data@@PAUclass_data@@F@Z @1349
+?ot_get_next_lvalue_arg@@YGPAUlvalue_ref@@PAUvm_state@@PAPAX@Z @1260
+?ot_array_create_unbounded@@YGPAUpb_array@@PAUvm_state@@HH@Z @1509
+?ob_get_current_stack_location@@YGPAUcurrent_stack_info@@PAUvm_state@@@Z @1606
+?ot_assign_ref_array@@YGXPAUvm_state@@PAUlvalue@@PAUpb_array@@FF@Z @1384
+?ot_set_return_val@@YGXPAUvm_state@@PAUvalue@@@Z	@1039

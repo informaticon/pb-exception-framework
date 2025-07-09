@@ -55,7 +55,7 @@ enum pbvalue_type
 };
 
 typedef struct {
-	DWORD value;
+	PVOID value;
 	short flags;
 	/* known flags
 		0x0001	is null
@@ -98,9 +98,9 @@ typedef struct {
 }lvalue_ref;
 
 typedef struct{
-    long f1;
-    short group_id;//+4
-    short class_id;//+6
+    void* f1;
+    short group_id;//+4 (x64 +8)
+    short class_id;//+6 (x64 +10)
     short routine_id;
     short f2;
 	short f3;
@@ -111,11 +111,9 @@ typedef struct{
 	short f8;
 	short f9;
 	void * f10;
-	short f12;
-	short f13;
-	short f14;
-	short f15;
-    short caller_line_no;//+38
+	void * f12;
+	void * f13;
+    short caller_line_no;//+38 (x64 +54)
 	short f16;
 	short f17;
 	short f18;
@@ -166,18 +164,24 @@ pb_array * __stdcall ot_array_create_unbounded(vm_state *, int, int);
 value * __stdcall ot_array_index(vm_state *, pb_array *, int);
 void __stdcall ot_assign_ref_array(vm_state *, lvalue *, pb_array*, short, short);
 void __stdcall ot_free_val_ptr(vm_state *, value *);
-lvalue_ref * __stdcall ot_get_next_lvalue_arg(vm_state *, DWORD *);
+lvalue_ref * __stdcall ot_get_next_lvalue_arg(vm_state *, PVOID *);
 void __stdcall ot_set_return_val(vm_state *, value *);
-void * __stdcall pbstg_alc(vm_state *, int, int);
+void * __stdcall pbstg_alc(vm_state *, int, PVOID);
 void __stdcall pbstg_fee(vm_state*, void*);
 bool __stdcall shlist_traversal(void *, void *, shlist_callback);
 
-#define GET_HEAP(x) (*(DWORD *)(((char *)x) + 0x11e))
-#define GET_STACKLIST(x) (void*)(*(DWORD *)(((char *)x) + 218))
+
+#if _WIN64
+#define GET_HEAP(x) (*(PVOID *)(((char *)x) + 0x1d2))
+#define GET_STACKLIST(x) (void*)(*(PVOID *)(((char *)x) + 0x15e))
+#else
+#define GET_HEAP(x) (*(PVOID *)(((char *)x) + 0x11e))
+#define GET_STACKLIST(x) (void*)(*(PVOID *)(((char *)x) + 0xda))
 #define GET_THROW(x) (((pb_class**)x)[147])
 #define GET_EVALEDARGLIST(x) (value*)(*(DWORD *)(((char *)x) + 0x0154))
 #define GET_THROWNEXCEPTION(x) (*(DWORD *)(((char *)x) + 0x024c))
 #define GET_CALLEDRETURNVALUE(x) (value*)((DWORD *)(((char *)x) + 0x0164))
+#endif
 
 value * get_lvalue(vm_state *vm, lvalue_ref *value_ref);
 void Throw_Exception(vm_state *vm, wchar_t *text, ...);
