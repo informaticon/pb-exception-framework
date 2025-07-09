@@ -43,15 +43,10 @@ jobs:
       
       - name: Setup compiler
         run: |
-          if (Get-Command "pbc${{ env.PB_MAJOR }}0" -ErrorAction SilentlyContinue) {
-            echo "Use preinstalled PB compiler"
-            echo "PB_COMPILER_EXE=pbc${{ env.PB_MAJOR }}0" >> $env:GITHUB_ENV
-          } else {
-            echo "Download PB compiler"
-            Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_TOKEN_READ_ASSETS }}"}
-            Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
-            echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbc${{ env.PB_MAJOR }}0.exe" >> $env:GITHUB_ENV
-          }
+          echo "Download PB compiler"
+          Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_TOKEN_READ_ASSETS }}"}
+          Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
+          echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbc${{ env.PB_MAJOR }}0.exe" >> $env:GITHUB_ENV
       
       - name: Set Informaticon placeholders
         env:

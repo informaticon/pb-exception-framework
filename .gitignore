@@ -6,3 +6,5 @@ build
 *.usr.opt
 *.xml
 .env
+.secrets
+.vars

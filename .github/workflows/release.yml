@@ -91,7 +91,7 @@ jobs:
 
       - name: Test
         run: |
-          ./test/test_exf.exe --run-all --quiet
+          ./test_exf.exe --run-all --quiet
 
       - name: Zip EXF
         run: |
