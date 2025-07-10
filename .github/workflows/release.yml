@@ -73,7 +73,6 @@ jobs:
           echo "EXF_RELEASE_FILE=$exfReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_OUTPUT
-          echo "CHOCO_ANALYZER_PKG=dev.win.base.exception-framework@${VERSION}+pb25-x64-minsizerel.zip" >> $env:GITHUB_OUTPUT
 
       - name: Setup compiler
         run: |
@@ -161,16 +160,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup environment
+        run: |
+          $VERSION = "0.0.0-trunk"
+          if ("${{ startsWith(github.ref, 'refs/tags/v') }}" -eq "True") {
+            $VERSION = "${{ github.ref_name }}".TrimStart('v')
+            Write-Host "Tag detected: ${{ github.ref_name }}, using version: $VERSION"
+          } else {
+            Write-Host "No tag detected, using default version: $VERSION"
+          }
+          
+          echo "CHOCO_ANALYZER_PKG=dev.win.base.exception-framework@${VERSION}+pb25-x64-minsizerel.zip" >> $env:GITHUB_ENV
+          
       - name: Download EXF analyzer artifact
         uses: actions/download-artifact@v4
         with:
-          name: "${{ steps.setup_environment.outputs.CHOCO_ANALYZER_PKG }}"
+          name: "${{ env.CHOCO_ANALYZER_PKG }}"
           path: .
 
       - name: Prepare EXF analyzer
         run: |
           # EXF Analyzer
-          Expand-Archive -Path "${{ steps.setup_environment.outputs.CHOCO_ANALYZER_PKG }}" -DestinationPath "payload"
+          Expand-Archive -Path "${{ env.CHOCO_ANALYZER_PKG }}" -DestinationPath "payload"
 
           # PB Runtime
           Invoke-WebRequest -OutFile "runtime.zip" -Uri "${{ vars.PB_PBDK_2025R1_X64_URL }}"
@@ -224,7 +235,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+        
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
