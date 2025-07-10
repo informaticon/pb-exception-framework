@@ -14,6 +14,7 @@ end variables
 
 global type exf_analyzer from application
 string appname = "exf_analyzer"
+integer highdpimode = 0
 string themepath = "C:\Program Files (x86)\Appeon\PowerBuilder 22.0\IDE\theme"
 string themename = "Do Not Use Themes"
 boolean nativepdfvalid = false
@@ -34,7 +35,6 @@ long webview2distribution = 0
 boolean webview2checkx86 = false
 boolean webview2checkx64 = false
 string webview2url = "https://developer.microsoft.com/en-us/microsoft-edge/webview2/"
-integer highdpimode = 0
 end type
 global exf_analyzer exf_analyzer
 
@@ -65,10 +65,6 @@ lu_adapter = create u_exf_exception_framework_adapter
 lu_adapter.of_enable_auto_upload(false)
 gu_e.of_set_app_adapter(lu_adapter)
 
-
-lu_adapter.of_enable_auto_upload(true)
-
 open(w_exf_analyzer)
 end event
-
 
