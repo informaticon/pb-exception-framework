@@ -28,4 +28,4 @@ jobs:
       - name: Push
         run: |
           git push public main
-          git push public main --tags
+          git push public --tags
