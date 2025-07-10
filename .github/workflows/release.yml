@@ -109,10 +109,8 @@ jobs:
           & "${{ env.PB_COMPILER_EXE }}" /pbc ${{ env.PB_COMPILER_FLAGS }} /d "${{ github.workspace }}/lib.pb.exception-framework.pbproj"
 
       - name: Test
-        shell: cmd
         run: |
-          echo %PATH%
-          test_exf.exe --run-all --quiet
+          ./test_exf.exe --run-all --quiet
 
       - name: Zip EXF
         run: |
