@@ -84,6 +84,7 @@ jobs:
             Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_TOKEN_READ_ASSETS }}"}
             Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
             echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbautobuild${{ env.PB_MAJOR }}0.exe" >> $env:GITHUB_ENV
+            echo "${{ github.workspace }}/compiler" >> $GITHUB_PATH
           }
 
       - name: Set Informaticon placeholders
@@ -108,8 +109,10 @@ jobs:
           & "${{ env.PB_COMPILER_EXE }}" /pbc ${{ env.PB_COMPILER_FLAGS }} /d "${{ github.workspace }}/lib.pb.exception-framework.pbproj"
 
       - name: Test
+        shell: cmd
         run: |
-          ./test_exf.exe --run-all --quiet
+          echo %PATH%
+          test_exf.exe --run-all --quiet
 
       - name: Zip EXF
         run: |
@@ -156,7 +159,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/') # Only for tag events
     runs-on: [windows-latest]
     env:
-      ANALYZER_ARTIFACT: "dev.win.base.exception-framework@${{ github.ref_name }}+pb25-x64-minsizerel.zip"
+      ANALYZER_ARTIFACT: "dev.win.base.exception-framework@${{ github.ref_name }}+pb25-x64-minsizerel"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -170,7 +173,7 @@ jobs:
       - name: Prepare EXF analyzer
         run: |
           # EXF Analyzer
-          Expand-Archive -Path "${{ env.ANALYZER_ARTIFACT }}" -DestinationPath "payload"
+          Expand-Archive -Path "${{ env.ANALYZER_ARTIFACT }}".zip -DestinationPath "payload"
 
           # PB Runtime
           Invoke-WebRequest -OutFile "runtime.zip" -Uri "${{ vars.PB_PBDK_2025R1_X64_URL }}"
