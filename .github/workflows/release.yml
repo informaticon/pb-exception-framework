@@ -73,6 +73,7 @@ jobs:
           echo "EXF_RELEASE_FILE=$exfReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_OUTPUT
+          echo "CHOCO_ANALYZER_PKG=dev.win.base.exception-framework@${VERSION}+pb25-x64-minsizerel.zip" >> $env:GITHUB_ENV
 
       - name: Setup compiler
         run: |
@@ -156,8 +157,6 @@ jobs:
     needs: build
     if: startsWith(github.ref, 'refs/tags/') # Only for tag events
     runs-on: [windows-latest]
-    env:
-      ANALYZER_ARTIFACT: "dev.win.base.exception-framework@${{ github.ref_name }}+pb25-x64-minsizerel.zip"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -165,13 +164,13 @@ jobs:
       - name: Download EXF analyzer artifact
         uses: actions/download-artifact@v4
         with:
-          name: "${{ env.ANALYZER_ARTIFACT }}"
+          name: "${{ env.CHOCO_ANALYZER_PKG }}"
           path: .
 
       - name: Prepare EXF analyzer
         run: |
           # EXF Analyzer
-          Expand-Archive -Path "${{ env.ANALYZER_ARTIFACT }}" -DestinationPath "payload"
+          Expand-Archive -Path "${{ env.CHOCO_ANALYZER_PKG }}" -DestinationPath "payload"
 
           # PB Runtime
           Invoke-WebRequest -OutFile "runtime.zip" -Uri "${{ vars.PB_PBDK_2025R1_X64_URL }}"
