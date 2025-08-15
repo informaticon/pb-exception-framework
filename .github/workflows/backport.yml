@@ -125,8 +125,7 @@ jobs:
           
       - name: Test
         run: |
-          # Start-Process -Wait needed because otherwise it would just continue without finishing
-          Start-Process -Wait .\build\pb2022r3\test_exf.exe -ArgumentList @("--run-all", "--quiet")
+          .\build\pb2022r3\test_exf.exe --run-all --quiet
 
       - name: Zip EXF
         run: |
