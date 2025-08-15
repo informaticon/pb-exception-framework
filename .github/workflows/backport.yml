@@ -18,6 +18,10 @@ jobs:
     runs-on: [windows-latest]
     needs:
       - build-dll
+    outputs:
+      release_file: ${{ steps.set_outputs.outputs.release_file }}
+      vjson_file: ${{ steps.set_outputs.outputs.vjson_file }}
+      version: ${{ steps.set_outputs.outputs.version }}
     env:
       PB_ARCH: "x86"
       PB_MAJOR: "22"
@@ -38,9 +42,11 @@ jobs:
           } else {
             Write-Host "No tag detected, using default version: $VERSION"
           }
+          echo "EXF_VERSION=$VERSION" >> $env:GITHUB_ENV
+
           $exfReleaseFile = "lib.pb.base.exception-framework@${VERSION}+pb${{ env.PB_MAJOR }}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
           echo "EXF_RELEASE_FILE=$exfReleaseFile" >> $env:GITHUB_ENV
-      
+
       - name: Setup compiler
         run: |
           echo "Download PB compiler"
@@ -77,13 +83,50 @@ jobs:
 
           ./pbmanager.exe import --orca-runtime "${{ github.workspace }}/compiler" -b ./build/pb2022r3 -t test_exf.pbt -p tst1,exf1,test_exf  ../../test ../..
       
+      - name: create version.json
+        run: |
+          $axpvData = Get-Content -Path "version.axpv" -Raw | ConvertFrom-Json
+          $tmplData = Get-Content -Path "ci/backport/version.json.tmpl" -Raw | ConvertFrom-Json
+
+          $tmplData.package_name = $axpvData.package_name
+          $tmplData.package_version = "${{ env.EXF_VERSION }}"
+          $tmplData.comment = $axpvData.comment
+          $tmplData.created = (git show -s --format=%ci HEAD).split(' ')[0]
+          $tmplData.long_term_support = $axpvData.long_term_support
+          $tmplData.dependency_bug = $axpvData.deprecated
+
+          $mergedAdditionalInfo = @{}
+          foreach ($addInfo in $axpvData.additional_info.PSObject.Properties) {
+            $mergedAdditionalInfo.($addInfo.Name) = $addInfo.Value
+          }
+          foreach ($addInfo in $tmplData.additional_info.PSObject.Properties) {
+            $mergedAdditionalInfo.($addInfo.Name) = $addInfo.Value
+          }
+          $tmplData.additional_info = $mergedAdditionalInfo
+
+          $tmplData.requirements = @{}
+          foreach ($req in $axpvData.requirements.PSObject.Properties) {
+              $tmplData.requirements.($req.Name) = $req.Value.constraint
+          }
+
+          foreach ($depName in $tmplData.dependencies.PSObject.Properties.Name) {
+              if ($axpvData.version_locks.PSObject.Properties.Name -contains $depName) {
+                  $tmplData.dependencies.$depName = $axpvData.version_locks.$depName.version
+              }
+          }
+
+          $vjsonData = $tmplData | ConvertTo-Json -Depth 20
+          Set-Content -Path "$( $tmplData.package_name ).json" -Value $vjsonData -Encoding UTF8
+          echo "VJSON_FILE=$( $tmplData.package_name ).json" >> $env:GITHUB_ENV
+
       - name: Compile
         run: |
           & "${{ env.PB_COMPILER_EXE }}" /d "${{ github.workspace }}\build\pb2022r3\test_exf.pbt"
-        
+          
       - name: Test
         run: |
-          .\build\pb2022r3\test_exf.exe --run-all --quiet
+          # Start-Process -Wait needed because otherwise it would just continue without finishing
+          Start-Process -Wait .\build\pb2022r3\test_exf.exe -ArgumentList @("--run-all", "--quiet")
 
       - name: Zip EXF
         run: |
@@ -91,6 +134,7 @@ jobs:
             "build/pb2022r3/exf1.pbl",
             "build/pb2022r3/exf1.pbd",
             "exf1.dll"
+            "${{ env.VJSON_FILE }}"
           )
           Compress-Archive -Path $FilesToZip -DestinationPath ${{ env.EXF_RELEASE_FILE }} -Force
 
@@ -98,6 +142,57 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.EXF_RELEASE_FILE }} 
-          path: ${{ env.EXF_RELEASE_FILE }} 
+          path: ${{ env.EXF_RELEASE_FILE }}
           if-no-files-found: error
+      
+      - name: Set Job Outputs
+        id: set_outputs
+        run: |
+          echo "release_file=${{ env.EXF_RELEASE_FILE }}" >> $env:GITHUB_OUTPUT
+          echo "vjson_file=${{ env.VJSON_FILE }}" >> $env:GITHUB_OUTPUT
+          echo "version=${{ env.EXF_VERSION }}" >> $env:GITHUB_OUTPUT
 
+          
+  push-svn:
+    if: github.repository_visibility == 'private'
+    runs-on: [self-hosted]
+    needs:
+      - backport-pb2022r3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.backport-pb2022r3.outputs.release_file }}
+          path: ./artifact
+
+      - name: Push SVN
+        run: |
+          $svnWorkspace = "./svn_folder"
+          $svnComment = (git log -1 --pretty=%B)
+          $repoName = ("${{ github.repository }}").Split('/')[1]
+          $version = "${{ needs.backport-pb2022r3.outputs.version }}"
+          $svnPath = "https://svn.informaticon.com/repos/a3"
+          $vjsonFile = "${{ needs.backport-pb2022r3.outputs.vjson_file }}"
+          if ($version -eq "0.0.0-trunk") {
+            $svnPath = "${svnPath}/${repoName}/trunk/lib"
+          } else {
+            $svnPath = "${svnPath}/${repoName}/tag/${version}/lib"
+          }
+          
+          svn mkdir --parents "${svnPath}" -m "init ${repoName}@${version}"
+          svn checkout "${svnPath}" $svnWorkspace
+          Get-ChildItem -Path $svnWorkspace -Force -Exclude '.svn' | Remove-Item -Recurse -Force
+          
+          Expand-Archive -Path "./artifact/${{ needs.backport-pb2022r3.outputs.release_file }}" -Destination $svnWorkspace
+
+          New-Item -Path "$SvnWorkspace/version" -ItemType Directory -Force
+          Move-Item -Path "$SvnWorkspace/$vjsonFile" -Destination "$SvnWorkspace/version/"
+          Remove-Item -Path "$SvnWorkspace/*.pbd" -Force
+          
+          cd $SvnWorkspace
+          svn status | Where-Object { $_ -match '^\?\s+(.*)' } | ForEach-Object { svn add $Matches[1] }
+          svn status | Where-Object { $_ -match '^!\s+(.*)' } | ForEach-Object { svn rm $Matches[1] }
+          svn commit -m "${svnComment}"

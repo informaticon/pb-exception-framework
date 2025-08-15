@@ -110,7 +110,8 @@ jobs:
 
       - name: Test
         run: |
-          ./test_exf.exe --run-all --quiet
+          # Start-Process -Wait needed because otherwise it would just continue without finishing
+          Start-Process -Wait ./test_exf.exe -ArgumentList @("--run-all", "--quiet")
 
       - name: Zip EXF
         run: |
