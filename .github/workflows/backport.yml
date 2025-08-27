@@ -26,7 +26,7 @@ jobs:
       PB_ARCH: "x86"
       PB_MAJOR: "222"
       CMAKE_BUILD_TYPE: "MinSizeRel"
-      PB_COMPILER_URL: ${{ vars.PB_COMPILER_22_X86_URL }}
+      PB_COMPILER_URL: ${{ vars.PB_COMPILER_222_X86_URL }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

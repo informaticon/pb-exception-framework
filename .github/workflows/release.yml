@@ -221,6 +221,12 @@ jobs:
         arch: ["x86", "x64", "src"]
     env:
       PB_MAJOR: "250"
+      AXP_DIST_PFX: ${{ env.PFX_FILE }}
+      AXP_DIST_PFXPASSPHRASE: ${{ secrets.SRVBUILDXY_PRIVATE_KEY_PASSPHRASE }}
+      AXP_AUTH_CID: ${{ secrets.PROD_AXP_CLIENT_ID }}
+      AXP_AUTH_CS: ${{ secrets.PROD_AXP_CLIENT_SECRET }}
+      AXP_IAM_URI: "https://account.informaticon.com/"
+      AXP_AXPS_URI: "https://package.informaticon.com/"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -267,7 +273,7 @@ jobs:
       
       - name: Upload axpd package to Package Service
         run: |
-          axp dist upload ${{ env.AXPD_FILE }}
+          axp dist upload ${{ env.AXPD_FILE }} --non-interactive
       
   release:
     name: Release
