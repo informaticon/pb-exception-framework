@@ -11,7 +11,7 @@ jobs:
     uses: ./.github/workflows/build-dll.yml
     with:
       pb_arch: "x86"
-      pb_major: "22"
+      pb_major: "222"
       build_type: "MinSizeRel"
     
   backport-pb2022r3:
@@ -24,7 +24,7 @@ jobs:
       version: ${{ steps.set_outputs.outputs.version }}
     env:
       PB_ARCH: "x86"
-      PB_MAJOR: "22"
+      PB_MAJOR: "222"
       CMAKE_BUILD_TYPE: "MinSizeRel"
       PB_COMPILER_URL: ${{ vars.PB_COMPILER_22_X86_URL }}
     steps:

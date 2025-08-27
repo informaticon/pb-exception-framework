@@ -16,7 +16,7 @@ jobs:
         arch: ["x86", "x64"]
     with:
       pb_arch: "${{ matrix.arch }}"
-      pb_major: "25"
+      pb_major: "250"
       build_type: "MinSizeRel"
 
   backport:
@@ -42,11 +42,11 @@ jobs:
     runs-on: [windows-latest]
     env:
       PB_ARCH: "${{ matrix.arch }}"
-      PB_MAJOR: "25"
+      PB_MAJOR: "250"
       CMAKE_BUILD_TYPE: "MinSizeRel"
       PB_COMPILER_URL: "${{ matrix.pb_compiler_url }}"
       PB_COMPILER_FLAGS: "${{ matrix.pb_compiler_flags }}"
-      DLL_ARTIFACT_NAME: "exf1.dll+pb25-${{ matrix.arch }}-minsizerel"
+      DLL_ARTIFACT_NAME: "exf1.dll+pb250-${{ matrix.arch }}-minsizerel"
     outputs:
       analyzer_release_file: ${{ steps.setup_environment.outputs.analyzer_release_file }}
     steps:
@@ -76,14 +76,14 @@ jobs:
 
       - name: Setup compiler
         run: |
-          if (Get-Command "pbautobuild${{ env.PB_MAJOR }}0" -ErrorAction SilentlyContinue) {
+          if (Get-Command "pbautobuild${{ env.PB_MAJOR }}" -ErrorAction SilentlyContinue) {
             echo "Use preinstalled PB compiler"
-            echo "PB_COMPILER_EXE=pbautobuild${{ env.PB_MAJOR }}0" >> $env:GITHUB_ENV
+            echo "PB_COMPILER_EXE=pbautobuild${{ env.PB_MAJOR }}" >> $env:GITHUB_ENV
           } else {
             echo "Download PB compiler"
             Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_TOKEN_READ_ASSETS }}"}
             Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
-            echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbautobuild${{ env.PB_MAJOR }}0.exe" >> $env:GITHUB_ENV
+            echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbautobuild${{ env.PB_MAJOR }}.exe" >> $env:GITHUB_ENV
             echo "${{ github.workspace }}/compiler" >> $GITHUB_PATH
           }
 
@@ -156,6 +156,8 @@ jobs:
     needs: build
     if: startsWith(github.ref, 'refs/tags/') # Only for tag events
     runs-on: [windows-latest]
+    env:
+      PB_MAJOR: "250"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -170,8 +172,8 @@ jobs:
             Write-Host "No tag detected, using default version: $VERSION"
           }
           
-          echo "CHOCO_ANALYZER_PKG=dev.win.base.exception-framework@${VERSION}+pb25-x64-minsizerel.zip" >> $env:GITHUB_ENV
-          
+          echo "CHOCO_ANALYZER_PKG=dev.win.base.exception-framework@${VERSION}+pb${{ env.PB_MAJOR}}-x64-minsizerel.zip" >> $env:GITHUB_ENV
+       
       - name: Download EXF analyzer artifact
         uses: actions/download-artifact@v4
         with:
@@ -206,21 +208,67 @@ jobs:
         with:
           name: ${{ env.NUPKG_RELEASE_FILE }}
           path: ${{ env.NUPKG_RELEASE_FILE }}
-          if-no-files-found: error
-
+          if-no-files-found: error   
+      
   axp-pack:
-    name: Create axpd Package
+    name: Create axpd Package (${{ matrix.arch }})
     needs: build
-    if: startsWith(github.ref, 'refs/tags/') &&
+    if: startsWith(github.ref, 'refs/tags/v') &&
       github.repository == 'informaticon/lib.pb.base.exception-framework'
-    runs-on: [windows, self-hosted]
-    # self-hosted for package signing
+    runs-on: [windows, self-hosted] # self-hosted for package signing
+    strategy:
+      matrix:
+        arch: ["x86", "x64", "src"]
+    env:
+      PB_MAJOR: "250"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # TODO
+      - name: Set version and artifact name
+        run: |
+          $VERSION = "0.0.0-trunk"
+          if ("${{ startsWith(github.ref, 'refs/tags/v') }}" -eq "True") {
+            $VERSION = "${{ github.ref_name }}".TrimStart('v')
+          }
+          echo "VERSION=$VERSION" >> $env:GITHUB_ENV
 
+          # for src, use x86 arch (there is no src arch release)
+          $arch = "${{ matrix.arch }}"
+          if ($arch -eq "src") {
+            $arch = "x86"
+          }
+          
+          $artifactName = "lib.pb.base.exception-framework@${VERSION}+pb${{ env.PB_MAJOR }}-${arch}-minsizerel.zip".toLower()
+          echo "ARTIFACT_NAME=$artifactName" >> $env:GITHUB_ENV
+
+      - name: Download EXF artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: .
+      
+      - name: Pack AXP distribution
+        run: |
+          $zipFile = "${{ env.ARTIFACT_NAME }}"
+          Expand-Archive -Path $zipFile -DestinationPath . -Force
+          
+          axp dist pack version.axpv --as-version "${{ env.VERSION }}+${{ matrix.arch }}" --axpd-filetype "pb${{ env.PB_MAJOR }}${{ matrix.arch }}" --non-interactive
+
+          $axpdFile = Get-ChildItem -Path . -Filter *.axpd | Select-Object -First 1
+          echo "AXPD_FILE=$($axpdFile.Name)" >> $env:GITHUB_ENV
+      
+      - name: Upload axpd package as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.AXPD_FILE }}
+          path: ${{ env.AXPD_FILE }}
+          if-no-files-found: error
+      
+      - name: Upload axpd package to Package Service
+        run: |
+          axp dist upload ${{ env.AXPD_FILE }}
+      
   release:
     name: Release
     needs:
@@ -240,10 +288,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./release-assets
-
-      - run: |
-          echo "release assets:"
-          tree /F /A release-assets
 
       - name: Create Github Release
         uses: softprops/action-gh-release@v2

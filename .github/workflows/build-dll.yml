@@ -8,9 +8,9 @@ on:
         default: "x86"
         type: string
       pb_major:
-        description: "PowerBuilder version (e.g., 25)"
+        description: "PowerBuilder version (e.g., 250 for PB2025R1)"
         required: true
-        default: "25"
+        default: "250"
         type: string
       build_type:
         description: "CMake build type (e.g., Release, MinSizeRel, Debug)"
