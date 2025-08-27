@@ -73,15 +73,10 @@ jobs:
       
       - name: Backport
         run: |
-          # Prepare work folder
-          New-Item -ItemType Directory -Force -Path ./build/pb2022r3
-          Copy-Item -Path "./ci/test/*" -Destination "./build/pb2022r3" -Recurse -Force
-
-        
           # Get pbmanager
           Invoke-WebRequest -OutFile "pbmanager.exe" -Uri "${{ vars.PB_PBMANAGER_URL }}"
-
-          ./pbmanager.exe import --orca-runtime "${{ github.workspace }}/compiler" -b ./build/pb2022r3 -t test_exf.pbt -p tst1,exf1,test_exf  ../../test ../..
+          
+          ./pbmanager.exe backport --orca-runtime "${{ github.workspace }}/compiler" lib.pb.base.exception-framework.pbproj
       
       - name: create version.json
         run: |
@@ -121,17 +116,17 @@ jobs:
 
       - name: Compile
         run: |
-          & "${{ env.PB_COMPILER_EXE }}" /d "${{ github.workspace }}\build\pb2022r3\test_exf.pbt"
+          & "${{ env.PB_COMPILER_EXE }}" /d "${{ github.workspace }}\lib.pb.base.exception-framework.pbt"
           
       - name: Test
         run: |
-          .\build\pb2022r3\test_exf.exe --run-all --quiet
+          ./test_exf.exe --run-all --quiet
 
       - name: Zip EXF
         run: |
           $FilesToZip = @(
-            "build/pb2022r3/exf1.pbl",
-            "build/pb2022r3/exf1.pbd",
+            "exf1.pbl",
+            "exf1.pbd",
             "exf1.dll"
             "${{ env.VJSON_FILE }}"
           )

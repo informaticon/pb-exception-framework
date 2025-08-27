@@ -106,7 +106,7 @@ jobs:
 
       - name: Build Tests
         run: |
-          & "${{ env.PB_COMPILER_EXE }}" /pbc ${{ env.PB_COMPILER_FLAGS }} /d "${{ github.workspace }}/lib.pb.exception-framework.pbproj"
+          & "${{ env.PB_COMPILER_EXE }}" /pbc ${{ env.PB_COMPILER_FLAGS }} /d "${{ github.workspace }}/lib.pb.base.exception-framework.pbproj"
 
       - name: Test
         run: |

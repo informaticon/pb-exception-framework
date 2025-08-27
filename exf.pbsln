@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <Solution>
-  <Projects Default="lib.pb.exception-framework.pbproj">
+  <Projects Default="lib.pb.base.exception-framework.pbproj">
     <Project Path="demo\demo.pbproj"/>
     <Project Path="analyzer\exf_analyzer.pbproj"/>
-    <Project Path="lib.pb.exception-framework.pbproj"/>
+    <Project Path="lib.pb.base.exception-framework.pbproj"/>
   </Projects>
 </Solution>
