@@ -148,9 +148,13 @@ More variables/secrets aree needed if you wish to actually release to production
     * `AXP_AXPS_URI` package server - usually https://package.informaticon.com/
     * `AXPS_AUTH_CID` ****
 
+### Build
+
+Just run
 ```ps1
 make build
 ```
+
 ## How to contribute
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) before sending a pull request.

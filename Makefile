@@ -6,8 +6,8 @@ endif
 .SHELLFLAGS := -Command
 
 .PHONY: build
-build:
-	act -P windows-latest=-self-hosted -P self-hosted=-self-hosted -W .github/workflows/release.yml --artifact-server-path ./build --var-file .vars --secret-file .secrets --eventpath tag_event
+build: build/tag_event.json
+	act -P windows-latest=-self-hosted -P self-hosted=-self-hosted -W .github/workflows/release.yml --artifact-server-path ./build --env-file .env --var-file .vars --secret-file .secrets --eventpath build/tag_event.json
 
 .PHONY: backport
 backport:
@@ -38,6 +38,10 @@ backport:
 test: backport
 # tests have to be run by cmd.exe, because pwsh does not detect errors
 	cmd.exe /c .\build\pb2022r3\test_exf.exe --run-all --quiet
+
+build/tag_event.json:
+	New-Item -ItemType Directory -Force -Path build
+	'{ "ref": "refs/tags/v0.0.0-trunk" }' | Out-File -FilePath "build/tag_event.json"
 
 .PHONY: clean
 clean:
