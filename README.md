@@ -137,7 +137,7 @@ More variables/secrets aree needed if you wish to actually release to production
     * `PB_COMPILER_250_X86_URL` download url for PB 2025R1 x86 compiler - can be set to https://artifactory.informaticon.com/artifactory/assets/dev.tool.base.pb-compiler@25.0.0.3683+x86.zip (private asset)
     * `PB_COMPILER_250_X64_URL` download url for PB 2025R1 x64 compiler - can be set to https://artifactory.informaticon.com/artifactory/assets/dev.tool.base.pb-compiler@25.0.0.3683+x64.zip (private asset)
     * `PB_PBDK_222_X86_URL` download url for PBDK 2022R3 - can be set to https://artifactory.informaticon.com/artifactory/assets-pub/lib.bin.base.pbdk@22.2.0-3356.zip (public asset)
-    * `PB_PBDK_225_X86_URL` download url for PBDK 2025R1 - can be set to https://artifactory.informaticon.com/artifactory/assets-pub/lib.bin.base.pbdk@25.0.0.3683+x86-standard.zip (public asset)
+    * `PB_PBDK_250_X86_URL` download url for PBDK 2025R1 - can be set to https://artifactory.informaticon.com/artifactory/assets-pub/lib.bin.base.pbdk@25.0.0.3683+x86-standard.zip (public asset)
     * `PB_PBMANAGER_URL` download url for pbmanager - can be set to https://artifactory.informaticon.com/artifactory/assets-pub/pbmanager@1.29.1.exe
 * secrets (in `.secrets` file)
     * `ARTIFACTORY_TOKEN_READ_ASSETS` token to acces private assets on artifactory
