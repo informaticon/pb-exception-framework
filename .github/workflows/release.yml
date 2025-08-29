@@ -295,7 +295,7 @@ jobs:
           $zipFile = "${{ env.ARTIFACT_NAME }}"
           Expand-Archive -Path $zipFile -DestinationPath . -Force
           
-          axp dist pack version.axpv --as-version "${{ env.VERSION }}" --axpd-filetype "pb${{ matrix.pb_major }}${{ matrix.arch }}" --non-interactive
+          axp dist pack version.axpv --as-version "${{ needs.prepare.outputs.version }}" --axpd-filetype "pb${{ matrix.pb_major }}${{ matrix.arch }}" --non-interactive
 
           $axpdFile = Get-ChildItem -Path . -Filter *.axpd | Select-Object -First 1
           echo "AXPD_FILE=$($axpdFile.Name)" >> $env:GITHUB_ENV
