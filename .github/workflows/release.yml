@@ -186,7 +186,7 @@ jobs:
           Expand-Archive -Path "${{ env.CHOCO_ANALYZER_PKG }}" -DestinationPath "payload"
 
           # PB Runtime
-          Invoke-WebRequest -OutFile "runtime.zip" -Uri "${{ vars.PB_PBDK_2025R1_X64_URL }}"
+          Invoke-WebRequest -OutFile "runtime.zip" -Uri "${{ vars.PB_PBDK_250_X64_URL }}"
           Expand-Archive -Path runtime.zip -DestinationPath "payload" -Force
 
           Compress-Archive -Path payload/* -DestinationPath ci/tools/exf_analyzer.zip
@@ -210,15 +210,51 @@ jobs:
           path: ${{ env.NUPKG_RELEASE_FILE }}
           if-no-files-found: error   
       
+  axps-publish:
+    name: Publish new version to package Service
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') &&
+      github.repository == 'informaticon/lib.pb.base.exception-framework'
+    runs-on: [windows, self-hosted]
+    env:
+      AXP_AUTH_CID: "${{ secrets.PROD_AXP_CLIENT_ID }}"
+      AXP_AUTH_CS: "${{ secrets.PROD_AXP_CLIENT_SECRET }}"
+      AXP_IAM_URI: "https://account.informaticon.com/"
+      AXP_AXPS_URI: "https://package.informaticon.com/"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set version / messsage
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+
+          $message = ""
+          try {
+            git rev-parse --verify --quiet "refs/tags/${{ github.ref_name }}"
+            
+            $message = $(git tag -l --format='%(contents)' ${{ github.ref_name }})
+          }
+          catch {
+              // tag does not exist, assume empty message
+          }
+          echo "MESSAGE=$message" >> $env:GITHUB_ENV
+          
+      - name: Publish version to package service
+        run: |
+          axp version --version "${{ env.VERSION }}" --comment "${{ env.MESSAGE }}" --publish-only --non-interactive
+
   axp-release:
     name: Create axpd Package (${{ matrix.arch }})
-    needs: build
+    needs: axps-publish
     if: startsWith(github.ref, 'refs/tags/v') &&
       github.repository == 'informaticon/lib.pb.base.exception-framework'
     runs-on: [windows, self-hosted] # self-hosted for package signing
     strategy:
       matrix:
         arch: ["x86", "x64", "src"]
+        pb_major: ["250"]
     env:
       AXP_DIST_PFXPASSPHRASE: "${{ secrets.SRVBUILDXY_PRIVATE_KEY_PASSPHRASE }}"
       AXP_AUTH_CID: "${{ secrets.PROD_AXP_CLIENT_ID }}"
@@ -246,7 +282,7 @@ jobs:
             $arch = "x86"
           }
           
-          $artifactName = "lib.pb.base.exception-framework@${VERSION}+pb${{ env.PB_MAJOR }}-${arch}-minsizerel.zip".toLower()
+          $artifactName = "lib.pb.base.exception-framework@${VERSION}+pb${{ matrix.pb_major }}-${arch}-minsizerel.zip".toLower()
           echo "ARTIFACT_NAME=$artifactName" >> $env:GITHUB_ENV
 
       - name: Download EXF artifact
@@ -260,7 +296,7 @@ jobs:
           $zipFile = "${{ env.ARTIFACT_NAME }}"
           Expand-Archive -Path $zipFile -DestinationPath . -Force
           
-          axp dist pack version.axpv --as-version "${{ env.VERSION }}+${{ matrix.arch }}" --axpd-filetype "pb${{ env.PB_MAJOR }}${{ matrix.arch }}" --non-interactive
+          axp dist pack version.axpv --as-version "${{ env.VERSION }}" --axpd-filetype "pb${{ matrix.pb_major }}${{ matrix.arch }}" --non-interactive
 
           $axpdFile = Get-ChildItem -Path . -Filter *.axpd | Select-Object -First 1
           echo "AXPD_FILE=$($axpdFile.Name)" >> $env:GITHUB_ENV

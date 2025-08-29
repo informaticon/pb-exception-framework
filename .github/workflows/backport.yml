@@ -52,7 +52,7 @@ jobs:
           echo "Download PB compiler"
           Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_TOKEN_READ_ASSETS }}"}
           Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
-          echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbc${{ env.PB_MAJOR }}0.exe" >> $env:GITHUB_ENV
+          echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbc220.exe" >> $env:GITHUB_ENV
       
       - name: Set Informaticon placeholders
         env:
