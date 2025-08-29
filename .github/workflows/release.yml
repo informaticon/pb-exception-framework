@@ -8,8 +8,40 @@ defaults:
   run:
     shell: pwsh
 jobs:
+  prepare:
+    name: ⚙️ Prepare Version Variables
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.vars.outputs.version }}
+      author: ${{ steps.vars.outputs.author }}
+      message: ${{ steps.vars.outputs.message }}
+    steps:
+    - name: "[VERSION] Checkout Code"
+      uses: actions/checkout@v4
+    
+    - name: "[VERSION] Set Reusable Variables"
+      id: vars
+      run: |
+        if ("${{ startsWith(github.ref, 'refs/tags/v') }}" -eq "True") {
+            $version = "${{ github.ref_name }}".TrimStart('v')
+            $message = git tag -l --format='%(contents)' ${{ github.ref_name }}
+            $author = git for-each-ref --format='%(taggername)' refs/tags/${{ github.ref_name }}
+        } else {
+            $version = "0.0.0-trunk"
+            $message = "Development build from ${{ github.ref_name }}"
+            $author = ""
+        }
+
+        if (-not $author) {
+            $author = "${{ github.event.head_commit.author.name }}"
+        }
+
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+        echo "message=$message" >> $env:GITHUB_OUTPUT
+        echo "author=$author" >> $env:GITHUB_OUTPUT
+
   build-dll:
-    name: Build exf1.dll (${{ matrix.arch }})
+    name: 🔨 Build exf1.dll (${{ matrix.arch }})
     uses: ./.github/workflows/build-dll.yml
     strategy:
       matrix:
@@ -20,12 +52,12 @@ jobs:
       build_type: "MinSizeRel"
 
   backport:
-    name: Backport to pb2022r3
+    name: 🔄 Backport to PB2022R3
     uses: ./.github/workflows/backport.yml
     secrets: inherit
 
   build:
-    name: Build Project (${{ matrix.arch }})
+    name: 🛠️ Build Project (${{ matrix.arch }})
     strategy:
       fail-fast: false
       matrix:
@@ -39,6 +71,7 @@ jobs:
             pb_compiler_flags: " /x 64 "
     needs:
       - build-dll
+      - prepare
     runs-on: [windows-latest]
     env:
       PB_ARCH: "${{ matrix.arch }}"
@@ -50,31 +83,22 @@ jobs:
     outputs:
       analyzer_release_file: ${{ steps.setup_environment.outputs.analyzer_release_file }}
     steps:
-      - name: Checkout
+      - name: "[BUILD] Checkout"
         uses: actions/checkout@v4
 
-      - name: Setup environment
+      - name: "[BUILD] Setup environment"
         id: setup_environment
         run: |
-
           New-Item -ItemType Directory -Force -Path build
 
-          # ZIP file name
-          $VERSION = "0.0.0-trunk"
-          if ("${{ startsWith(github.ref, 'refs/tags/v') }}" -eq "True") {
-            $VERSION = "${{ github.ref_name }}".TrimStart('v')
-            Write-Host "Tag detected: ${{ github.ref_name }}, using version: $VERSION"
-          } else {
-            Write-Host "No tag detected, using default version: $VERSION"
-          }
+          $exfReleaseFile = "lib.pb.base.exception-framework@${{ needs.prepare.outputs.version }}+pb${{ env.PB_MAJOR }}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
+          $analyzerReleaseFile = "dev.win.base.exception-framework@${{ needs.prepare.outputs.version }}+pb${{ env.PB_MAJOR }}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
           
-          $exfReleaseFile = "lib.pb.base.exception-framework@${VERSION}+pb${{ env.PB_MAJOR }}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
-          $analyzerReleaseFile = "dev.win.base.exception-framework@${VERSION}+pb${{ env.PB_MAJOR }}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
           echo "EXF_RELEASE_FILE=$exfReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_OUTPUT
 
-      - name: Setup compiler
+      - name: "[BUILD] Setup compiler"
         run: |
           if (Get-Command "pbautobuild${{ env.PB_MAJOR }}" -ErrorAction SilentlyContinue) {
             echo "Use preinstalled PB compiler"
@@ -87,7 +111,7 @@ jobs:
             echo "${{ github.workspace }}/compiler" >> $GITHUB_PATH
           }
 
-      - name: Set Informaticon placeholders
+      - name: "[BUILD] Set Informaticon placeholders"
         env:
           PS_OAUTH_TOKEN_URL: ${{ vars.PS_OAUTH_TOKEN_URL }}
           PS_OAUTH_CLIENT_ID: ${{ vars.PS_OAUTH_CLIENT_ID }}
@@ -104,15 +128,13 @@ jobs:
           name: ${{ env.DLL_ARTIFACT_NAME }}
           path: .
 
-      - name: Build Tests
+      - name: "[BUILD] Build & Run EXF"
         run: |
           & "${{ env.PB_COMPILER_EXE }}" /pbc ${{ env.PB_COMPILER_FLAGS }} /d "${{ github.workspace }}/lib.pb.base.exception-framework.pbproj"
 
-      - name: Test
-        run: |
           ./test_exf.exe --run-all --quiet
 
-      - name: Zip EXF
+      - name: "[BUILD] Zip EXF Artifact"
         run: |
           $FilesToZip = @(
             "exf1.pbl",
@@ -121,18 +143,18 @@ jobs:
           )
           Compress-Archive -Path $FilesToZip -DestinationPath ${{ env.EXF_RELEASE_FILE }} -Force
 
-      - name: Upload EXF
+      - name: "[BUILD] Upload EXF Artifact"
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.EXF_RELEASE_FILE }}
           path: ${{ env.EXF_RELEASE_FILE }}
           if-no-files-found: error
 
-      - name: Build Analyzer
+      - name: "[BUILD] Build Analyzer Artifact"
         run: |
           & "${{ env.PB_COMPILER_EXE }}" /pbc ${{ env.PB_COMPILER_FLAGS}} /d "${{ github.workspace }}/analyzer/exf_analyzer.pbproj"
 
-      - name: Zip Analyzer
+      - name: "[BUILD] Zip Analyzer Artifact"
         run: |
           $FilesToZip = @(
             "exf1.pbd",
@@ -144,43 +166,37 @@ jobs:
           )
           Compress-Archive -Path $FilesToZip -DestinationPath ${{ env.ANALYZER_RELEASE_FILE }} -Force
 
-      - name: Upload Analyzer
+      - name: "[BUILD] Upload Analyzer Artifact"
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ANALYZER_RELEASE_FILE }}
           path: ${{ env.ANALYZER_RELEASE_FILE }}
           if-no-files-found: error
 
-  choco-pack:
-    name: Create Chocolatey Package
-    needs: build
+  choco-release:
+    name: 📦 Release Chocolatey Package
+    needs:
+      - build
+      - prepare
     if: startsWith(github.ref, 'refs/tags/') # Only for tag events
     runs-on: [windows-latest]
     env:
       PB_MAJOR: "250"
     steps:
-      - name: Checkout code
+      - name: "[CHOCO] Checkout Code"
         uses: actions/checkout@v4
 
-      - name: Setup environment
+      - name: "[CHOCO] Setup Environment"
         run: |
-          $VERSION = "0.0.0-trunk"
-          if ("${{ startsWith(github.ref, 'refs/tags/v') }}" -eq "True") {
-            $VERSION = "${{ github.ref_name }}".TrimStart('v')
-            Write-Host "Tag detected: ${{ github.ref_name }}, using version: $VERSION"
-          } else {
-            Write-Host "No tag detected, using default version: $VERSION"
-          }
-          
-          echo "CHOCO_ANALYZER_PKG=dev.win.base.exception-framework@${VERSION}+pb${{ env.PB_MAJOR}}-x64-minsizerel.zip" >> $env:GITHUB_ENV
+          echo "CHOCO_ANALYZER_PKG=dev.win.base.exception-framework@${{ needs.prepare.outputs.version }}+pb${{ env.PB_MAJOR}}-x64-minsizerel.zip" >> $env:GITHUB_ENV
        
-      - name: Download EXF analyzer artifact
+      - name: "[CHOCO] Download EXF Analyzer Artifact"
         uses: actions/download-artifact@v4
         with:
           name: "${{ env.CHOCO_ANALYZER_PKG }}"
           path: .
 
-      - name: Prepare EXF analyzer
+      - name: "[CHOCO] Prepare EXF Analyzer"
         run: |
           # EXF Analyzer
           Expand-Archive -Path "${{ env.CHOCO_ANALYZER_PKG }}" -DestinationPath "payload"
@@ -191,63 +207,54 @@ jobs:
 
           Compress-Archive -Path payload/* -DestinationPath ci/tools/exf_analyzer.zip
 
-      - name: Prepare nuspec file
+      - name: "[CHOCO] Prepare nuspec File"
         run: |
           $xmlDoc = [xml](Get-Content -Path "ci/exf_analyzer.nuspec" -Raw)
-          $xmlDoc.package.metadata.version = "${{ github.ref_name }}".TrimStart("v")
+          $xmlDoc.package.metadata.version = "${{ needs.prepare.outputs.version }}"
           $xmlDoc.OuterXml | Set-Content "ci/exf_analyzer.nuspec"
 
-      - name: Create Chocolatey pakage
+      - name: "[CHOCO] Create Chocolatey Pakage"
         run: |
-          $NUPKG_RELEASE_FILE = "exf-analyzer.$("${{ github.ref_name }}".TrimStart("v")).nupkg"
+          $NUPKG_RELEASE_FILE = "exf-analyzer.${{ needs.prepare.outputs.version }}.nupkg"
           choco pack ci/exf_analyzer.nuspec
           echo "NUPKG_RELEASE_FILE=$NUPKG_RELEASE_FILE" >> $env:GITHUB_ENV
 
-      - name: Upload Chocolatey pakage
+      - name: "[CHOCO] Upload Chocolatey Pakage"
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.NUPKG_RELEASE_FILE }}
           path: ${{ env.NUPKG_RELEASE_FILE }}
-          if-no-files-found: error   
+          if-no-files-found: error
+      
+      - name: "[CHOCO] Create Chocolatey Release"
+        if: github.repository == 'informaticon/lib.pb.base.exception-framework'
+        run: |
+          choco push ${{ env.NUPKG_RELEASE_FILE }} --api-key "${{ secrets.GITHUB_TOKEN }}" --source "${{ vars.CHOCO_REGISTRY }}"
       
   axps-publish:
-    name: Publish new version to package Service
-    needs: build
+    name: 🔖 Publish New Version to Package Service
+    needs:
+      - prepare
     if: startsWith(github.ref, 'refs/tags/v') &&
       github.repository == 'informaticon/lib.pb.base.exception-framework'
     runs-on: [windows, self-hosted]
     env:
       AXP_AUTH_CID: "${{ secrets.PROD_AXP_CLIENT_ID }}"
       AXP_AUTH_CS: "${{ secrets.PROD_AXP_CLIENT_SECRET }}"
-      AXP_IAM_URI: "https://account.informaticon.com/"
-      AXP_AXPS_URI: "https://package.informaticon.com/"
     steps:
-      - name: Checkout code
+      - name: "[AXPS] Checkout Code"
         uses: actions/checkout@v4
 
-      - name: Set version / messsage
+      - name: "[AXPS] Publish Version"
         run: |
-          $version = "${{ github.ref_name }}".TrimStart('v')
-          echo "VERSION=$version" >> $env:GITHUB_ENV
-
-          $message = ""
-          try {
-            git rev-parse --verify --quiet "refs/tags/${{ github.ref_name }}"
-            
-            $message = $(git tag -l --format='%(contents)' ${{ github.ref_name }})
-          }
-          catch {
-              // tag does not exist, assume empty message
-          }
-          echo "MESSAGE=$message" >> $env:GITHUB_ENV
-          
-      - name: Publish version to package service
-        run: |
-          axp version --version "${{ env.VERSION }}" --comment "${{ env.MESSAGE }}" --publish-only --non-interactive
+          axp version --version "${{ needs.prepare.outputs.version }}" --comment "${{ env.MESSAGE }}" --created-by "${{ needs.prepare.outputs.author }}" --publish-only --non-interactive
 
   axp-release:
-    name: Create axpd Package (${{ matrix.arch }})
-    needs: axps-publish
+    name: 🚀 Create axpd Package (${{ matrix.arch }})
+    needs:
+      - axps-publish
+      - build
+      - prepare
     if: startsWith(github.ref, 'refs/tags/v') &&
       github.repository == 'informaticon/lib.pb.base.exception-framework'
     runs-on: [windows, self-hosted] # self-hosted for package signing
@@ -259,39 +266,31 @@ jobs:
       AXP_DIST_PFXPASSPHRASE: "${{ secrets.SRVBUILDXY_PRIVATE_KEY_PASSPHRASE }}"
       AXP_AUTH_CID: "${{ secrets.PROD_AXP_CLIENT_ID }}"
       AXP_AUTH_CS: "${{ secrets.PROD_AXP_CLIENT_SECRET }}"
-      AXP_IAM_URI: "https://account.informaticon.com/"
-      AXP_AXPS_URI: "https://package.informaticon.com/"
     steps:
-      - name: Set AXP_DIST_PFX from runner environment
-        run: echo "AXP_DIST_PFX=$($env:SRVBUILDXY_PFX_FILE)" >> $env:GITHUB_ENV
-
-      - name: Checkout code
+      - name: "[PKG] Checkout code"
         uses: actions/checkout@v4
 
-      - name: Set version and artifact name
+      - name: "[PKG] Setup Environment"
         run: |
-          $VERSION = "0.0.0-trunk"
-          if ("${{ startsWith(github.ref, 'refs/tags/v') }}" -eq "True") {
-            $VERSION = "${{ github.ref_name }}".TrimStart('v')
-          }
-          echo "VERSION=$VERSION" >> $env:GITHUB_ENV
-
+          # package signing
+          echo "AXP_DIST_PFX=$($env:SRVBUILDXY_PFX_FILE)" >> $env:GITHUB_ENV
+          
           # for src, use x86 arch (there is no src arch release)
           $arch = "${{ matrix.arch }}"
           if ($arch -eq "src") {
             $arch = "x86"
           }
           
-          $artifactName = "lib.pb.base.exception-framework@${VERSION}+pb${{ matrix.pb_major }}-${arch}-minsizerel.zip".toLower()
+          $artifactName = "lib.pb.base.exception-framework@${{ needs.prepare.outputs.version }}+pb${{ matrix.pb_major }}-${arch}-minsizerel.zip".toLower()
           echo "ARTIFACT_NAME=$artifactName" >> $env:GITHUB_ENV
 
-      - name: Download EXF artifact
+      - name: "[PKG] Download EXF Artifact"
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: .
       
-      - name: Pack AXP distribution
+      - name: "[PKG] Create axpd"
         run: |
           $zipFile = "${{ env.ARTIFACT_NAME }}"
           Expand-Archive -Path $zipFile -DestinationPath . -Force
@@ -301,22 +300,22 @@ jobs:
           $axpdFile = Get-ChildItem -Path . -Filter *.axpd | Select-Object -First 1
           echo "AXPD_FILE=$($axpdFile.Name)" >> $env:GITHUB_ENV
       
-      - name: Upload axpd package as artifact
+      - name: "[PKG] Upload axpd as Artifact"
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.AXPD_FILE }}
           path: ${{ env.AXPD_FILE }}
           if-no-files-found: error
       
-      - name: Upload axpd package to Package Service
+      - name: "[PKG] Upload axpd to AXPS"
         run: |
           axp dist upload ${{ env.AXPD_FILE }} --non-interactive
       
   release:
-    name: Release
+    name: 🎉 Release
     needs:
       - build
-      - choco-pack
+      - choco-release
       - axp-release
       - backport
     if: startsWith(github.ref, 'refs/tags/') # Only for tag events
@@ -325,7 +324,7 @@ jobs:
       contents: write
       packages: write
     steps:
-      - name: Checkout code
+      - name: "[GH] Checkout code"
         uses: actions/checkout@v4
         
       - name: Download build artifacts
@@ -333,8 +332,8 @@ jobs:
         with:
           path: ./release-assets
 
-      - name: Create Github Release
-        uses: softprops/action-gh-release@v2
+      - name: "[GH] GitHub Release"
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
@@ -343,10 +342,3 @@ jobs:
             ./release-assets/*/*.zip
             ./release-assets/*/*.nupkg
             ./release-assets/*/*.axpd
-
-      - name: Create Choco Release
-        if: github.repository == 'informaticon/lib.pb.base.exception-framework'
-        run: |
-          Get-ChildItem -Recurse -File -Path ./release-assets/ -Filter *.nupkg | ForEach-Object {
-            choco push $_.FullName --api-key "${{ secrets.GITHUB_TOKEN }}" --source "${{ vars.CHOCO_REGISTRY }}"
-          }
