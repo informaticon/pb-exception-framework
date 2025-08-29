@@ -129,13 +129,7 @@ u_exf_blob lu_blob
 lu_else = create u_exf_blob
 lu_else.ibl_data = blob('ELSE', encodingutf8!)
 
-lu_blob = gu_e.of_get_app_adapter().of_parse_to_blob(1, lu_else)
-pu_context.of_assert_equal(string(lu_blob.ibl_data, encodingutf8!), '1', 'Primitive type test failed')
-
-lu_blob = gu_e.of_get_app_adapter().of_parse_to_blob(this, lu_else)
-pu_context.of_assert_equal(string(lu_blob.ibl_data, encodingutf8!), 'ELSE', 'Object **without** of_to_string() function test failed')
-
-lu_blob = gu_e.of_get_app_adapter().of_parse_to_blob(lu_else, lu_else)
+lu_blob = gu_e.of_get_app_adapter().of_parse_to_blob(lu_else)
 pu_context.of_assert_equal(string(lu_blob.ibl_data, encodingutf8!), lu_else.of_to_string(), &
 	'Object **with** of_to_string() function test failed' &
 )
