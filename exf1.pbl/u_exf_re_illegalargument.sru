@@ -1,9 +1,9 @@
 forward
-global type u_exf_re_illegalargument from exf1_u_exf_re_illegalargument
+global type u_exf_re_illegalargument from u_exf_re
 end type
 end forward
 
-global type u_exf_re_illegalargument from exf1_u_exf_re_illegalargument
+global type u_exf_re_illegalargument from u_exf_re
 end type
 global u_exf_re_illegalargument u_exf_re_illegalargument
 
