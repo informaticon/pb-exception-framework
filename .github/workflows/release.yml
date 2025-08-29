@@ -27,25 +27,19 @@ jobs:
             $version = "${{ github.ref_name }}".TrimStart('v')
             $message = git tag -l --format='%(contents)' ${{ github.ref_name }}
             $author = git for-each-ref --format='%(taggername)' refs/tags/${{ github.ref_name }}
-            $date = git for-each-ref --format='%(taggerdate:iso8601)' refs/tags/${{ github.ref_name }}
         } else {
             $version = "0.0.0-trunk"
             $message = "Development build from ${{ github.ref_name }}"
             $author = ""
-            $date = ""
         }
 
         if (-not $author) {
             $author = "${{ github.event.head_commit.author.name }}"
         }
-        if (-not $date) {
-          $date = (Get-Date).ToUniversalTime().ToString("o")
-        }
 
         echo "version=$version" >> $env:GITHUB_OUTPUT
         echo "message=$message" >> $env:GITHUB_OUTPUT
         echo "author=$author" >> $env:GITHUB_OUTPUT
-        echo "date=$date" >> $env:GITHUB_OUTPUT
 
   build-dll:
     name: 🔨 Build exf1.dll (${{ matrix.arch }})
@@ -254,7 +248,7 @@ jobs:
 
       - name: "[AXPS] Publish Version"
         run: |
-          axp version --version "${{ needs.prepare.outputs.version }}" --comment "${{ env.MESSAGE }}" --created-by "${{ needs.prepare.outputs.author }}" --created-at "${{ needs.prepare.outputs.date }}" --publish-only --non-interactive
+          axp version --version "${{ needs.prepare.outputs.version }}" --comment "${{ env.MESSAGE }}" --created-by "${{ needs.prepare.outputs.author }}" --publish-only --non-interactive
 
   axp-release:
     name: 🚀 Create axpd Package (${{ matrix.arch }})
