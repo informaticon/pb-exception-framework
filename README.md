@@ -130,6 +130,7 @@ Most of the build requirements can be installed using [choco](https://community.
 
 ### Build variables
 Those variables have to be set to build the project.
+For the open source release, you do not need all of them.
 More variables/secrets aree needed if you wish to actually release to production (see release.yml):
 
 * variables (in `.vars`file)
@@ -162,3 +163,4 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) before sending a pull request.
 ## Related work
 
 Part of the code for the stacktrace function was kindly made available under the MIT licence by [Jeremy Lakeman](https://github.com/lakeman/fastfuncs).
+
