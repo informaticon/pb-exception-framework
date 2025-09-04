@@ -16,29 +16,29 @@ jobs:
       author: ${{ steps.vars.outputs.author }}
       message: ${{ steps.vars.outputs.message }}
     steps:
-    - name: "[VERSION] Checkout Code"
-      uses: actions/checkout@v4
-    
-    - name: "[VERSION] Set Reusable Variables"
-      id: vars
-      run: |
-        if ("${{ startsWith(github.ref, 'refs/tags/v') }}" -eq "True") {
-            $version = "${{ github.ref_name }}".TrimStart('v')
-            $message = git tag -l --format='%(contents)' ${{ github.ref_name }}
-            $author = git for-each-ref --format='%(taggername)' refs/tags/${{ github.ref_name }}
-        } else {
-            $version = "0.0.0-trunk"
-            $message = "Development build from ${{ github.ref_name }}"
-            $author = ""
-        }
+      - name: "[VERSION] Checkout Code"
+        uses: actions/checkout@v4
 
-        if (-not $author) {
-            $author = "${{ github.event.head_commit.author.name }}"
-        }
+      - name: "[VERSION] Set Reusable Variables"
+        id: vars
+        run: |
+          if ("${{ startsWith(github.ref, 'refs/tags/v') }}" -eq "True") {
+              $version = "${{ github.ref_name }}".TrimStart('v')
+              $message = git tag -l --format='%(contents)' ${{ github.ref_name }}
+              $author = git for-each-ref --format='%(taggername)' refs/tags/${{ github.ref_name }}
+          } else {
+              $version = "0.0.0-trunk"
+              $message = "Development build from ${{ github.ref_name }}"
+              $author = ""
+          }
 
-        echo "version=$version" >> $env:GITHUB_OUTPUT
-        echo "message=$message" >> $env:GITHUB_OUTPUT
-        echo "author=$author" >> $env:GITHUB_OUTPUT
+          if (-not $author) {
+              $author = "${{ github.event.head_commit.author.name }}"
+          }
+
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+          echo "message=$message" >> $env:GITHUB_OUTPUT
+          echo "author=$author" >> $env:GITHUB_OUTPUT
 
   build-dll:
     name: 🔨 Build exf1.dll (${{ matrix.arch }})
@@ -93,7 +93,7 @@ jobs:
 
           $exfReleaseFile = "lib.pb.base.exception-framework@${{ needs.prepare.outputs.version }}+pb${{ env.PB_MAJOR }}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
           $analyzerReleaseFile = "dev.win.base.exception-framework@${{ needs.prepare.outputs.version }}+pb${{ env.PB_MAJOR }}-${{ env.PB_ARCH }}-${{ env.CMAKE_BUILD_TYPE }}.zip".toLower()
-          
+
           echo "EXF_RELEASE_FILE=$exfReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_ENV
           echo "ANALYZER_RELEASE_FILE=$analyzerReleaseFile" >> $env:GITHUB_OUTPUT
@@ -105,7 +105,7 @@ jobs:
             echo "PB_COMPILER_EXE=pbautobuild${{ env.PB_MAJOR }}" >> $env:GITHUB_ENV
           } else {
             echo "Download PB compiler"
-            Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_TOKEN_READ_ASSETS }}"}
+            Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_READ_TOKEN }}"}
             Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
             echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbautobuild${{ env.PB_MAJOR }}.exe" >> $env:GITHUB_ENV
             echo "${{ github.workspace }}/compiler" >> $GITHUB_PATH
@@ -189,7 +189,7 @@ jobs:
       - name: "[CHOCO] Setup Environment"
         run: |
           echo "CHOCO_ANALYZER_PKG=dev.win.base.exception-framework@${{ needs.prepare.outputs.version }}+pb${{ env.PB_MAJOR}}-x64-minsizerel.zip" >> $env:GITHUB_ENV
-       
+
       - name: "[CHOCO] Download EXF Analyzer Artifact"
         uses: actions/download-artifact@v4
         with:
@@ -225,12 +225,12 @@ jobs:
           name: ${{ env.NUPKG_RELEASE_FILE }}
           path: ${{ env.NUPKG_RELEASE_FILE }}
           if-no-files-found: error
-      
+
       - name: "[CHOCO] Create Chocolatey Release"
         if: github.repository == 'informaticon/lib.pb.base.exception-framework'
         run: |
           choco push ${{ env.NUPKG_RELEASE_FILE }} --api-key "${{ secrets.GITHUB_TOKEN }}" --source "${{ vars.CHOCO_REGISTRY }}"
-      
+
   axps-publish:
     name: 🔖 Publish New Version to Package Service
     needs:
@@ -274,13 +274,13 @@ jobs:
         run: |
           # package signing
           echo "AXP_DIST_PFX=$($env:SRVBUILDXY_PFX_FILE)" >> $env:GITHUB_ENV
-          
+
           # for src, use x86 arch (there is no src arch release)
           $arch = "${{ matrix.arch }}"
           if ($arch -eq "src") {
             $arch = "x86"
           }
-          
+
           $artifactName = "lib.pb.base.exception-framework@${{ needs.prepare.outputs.version }}+pb${{ matrix.pb_major }}-${arch}-minsizerel.zip".toLower()
           echo "ARTIFACT_NAME=$artifactName" >> $env:GITHUB_ENV
 
@@ -289,28 +289,28 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: .
-      
+
       - name: "[PKG] Create axpd"
         run: |
           $zipFile = "${{ env.ARTIFACT_NAME }}"
           Expand-Archive -Path $zipFile -DestinationPath . -Force
-          
+
           axp dist pack version.axpv --as-version "${{ needs.prepare.outputs.version }}" --axpd-filetype "pb${{ matrix.pb_major }}${{ matrix.arch }}" --non-interactive
 
           $axpdFile = Get-ChildItem -Path . -Filter *.axpd | Select-Object -First 1
           echo "AXPD_FILE=$($axpdFile.Name)" >> $env:GITHUB_ENV
-      
+
       - name: "[PKG] Upload axpd as Artifact"
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.AXPD_FILE }}
           path: ${{ env.AXPD_FILE }}
           if-no-files-found: error
-      
+
       - name: "[PKG] Upload axpd to AXPS"
         run: |
           axp dist upload ${{ env.AXPD_FILE }} --non-interactive
-      
+
   release:
     name: 🎉 Release
     needs:
@@ -326,7 +326,7 @@ jobs:
     steps:
       - name: "[GH] Checkout code"
         uses: actions/checkout@v4
-        
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:

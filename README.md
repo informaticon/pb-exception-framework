@@ -141,7 +141,7 @@ More variables/secrets aree needed if you wish to actually release to production
     * `PB_PBDK_250_X86_URL` download url for PBDK 2025R1 - can be set to https://artifactory.informaticon.com/artifactory/assets-pub/lib.bin.base.pbdk@25.0.0.3683+x86-standard.zip (public asset)
     * `PB_PBMANAGER_URL` download url for pbmanager - can be set to https://artifactory.informaticon.com/artifactory/assets-pub/pbmanager@1.29.1.exe
 * secrets (in `.secrets` file)
-    * `ARTIFACTORY_TOKEN_READ_ASSETS` token to acces private assets on artifactory
+    * `ARTIFACTORY_READ_TOKEN` token to acces private assets on artifactory
 * env variables (in `.env` file) - only needed for AXP releases
     * `AXP_DIST_UPLOADURL` asset server - usually https://file.informaticon.com/
     * `AXP_IAM_URI` openid server - usually https://account.informaticon.com/

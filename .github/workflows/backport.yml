@@ -13,7 +13,7 @@ jobs:
       pb_arch: "x86"
       pb_major: "222"
       build_type: "MinSizeRel"
-    
+
   backport-pb2022r3:
     runs-on: [windows-latest]
     needs:
@@ -50,10 +50,10 @@ jobs:
       - name: Setup compiler
         run: |
           echo "Download PB compiler"
-          Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_TOKEN_READ_ASSETS }}"}
+          Invoke-WebRequest -OutFile "compiler.zip" -Uri "${{ env.PB_COMPILER_URL }}" -Headers @{Authorization = "Bearer ${{ secrets.ARTIFACTORY_READ_TOKEN }}"}
           Expand-Archive -Path compiler.zip -DestinationPath "${{ github.workspace }}/compiler" -Force
           echo "PB_COMPILER_EXE=${{ github.workspace }}/compiler/pbc220.exe" >> $env:GITHUB_ENV
-      
+
       - name: Set Informaticon placeholders
         env:
           PS_OAUTH_TOKEN_URL: ${{ secrets.PS_OAUTH_TOKEN_URL }}
@@ -70,14 +70,14 @@ jobs:
         with:
           name: ${{ needs.build-dll.outputs.artifact_name }}
           path: .
-      
+
       - name: Backport
         run: |
           # Get pbmanager
           Invoke-WebRequest -OutFile "pbmanager.exe" -Uri "${{ vars.PB_PBMANAGER_URL }}"
-          
+
           ./pbmanager.exe backport --orca-runtime "${{ github.workspace }}/compiler" lib.pb.base.exception-framework.pbproj
-      
+
       - name: create version.json
         run: |
           $axpvData = Get-Content -Path "version.axpv" -Raw | ConvertFrom-Json
@@ -117,7 +117,7 @@ jobs:
       - name: Compile
         run: |
           & "${{ env.PB_COMPILER_EXE }}" /d "${{ github.workspace }}\lib.pb.base.exception-framework.pbt"
-          
+
       - name: Test
         run: |
           ./test_exf.exe --run-all --quiet
@@ -135,10 +135,10 @@ jobs:
       - name: Upload EXF
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.EXF_RELEASE_FILE }} 
+          name: ${{ env.EXF_RELEASE_FILE }}
           path: ${{ env.EXF_RELEASE_FILE }}
           if-no-files-found: error
-      
+
       - name: Set Job Outputs
         id: set_outputs
         run: |
@@ -146,7 +146,6 @@ jobs:
           echo "vjson_file=${{ env.VJSON_FILE }}" >> $env:GITHUB_OUTPUT
           echo "version=${{ env.EXF_VERSION }}" >> $env:GITHUB_OUTPUT
 
-          
   push-svn:
     if: github.repository_visibility == 'private'
     runs-on: [self-hosted]
@@ -175,17 +174,17 @@ jobs:
           } else {
             $svnPath = "${svnPath}/${repoName}/tag/${version}/lib"
           }
-          
+
           svn mkdir --parents "${svnPath}" -m "init ${repoName}@${version}"
           svn checkout "${svnPath}" $svnWorkspace
           Get-ChildItem -Path $svnWorkspace -Force -Exclude '.svn' | Remove-Item -Recurse -Force
-          
+
           Expand-Archive -Path "./artifact/${{ needs.backport-pb2022r3.outputs.release_file }}" -Destination $svnWorkspace
 
           New-Item -Path "$SvnWorkspace/version" -ItemType Directory -Force
           Move-Item -Path "$SvnWorkspace/$vjsonFile" -Destination "$SvnWorkspace/version/"
           Remove-Item -Path "$SvnWorkspace/*.pbd" -Force
-          
+
           cd $SvnWorkspace
           svn status | Where-Object { $_ -match '^\?\s+(.*)' } | ForEach-Object { svn add $Matches[1] }
           svn status | Where-Object { $_ -match '^!\s+(.*)' } | ForEach-Object { svn rm $Matches[1] }
