@@ -9,7 +9,7 @@
     <authors>Simon Jutzi</authors>
     <owners>Simon Jutzi</owners>
     <projectUrl>https://slab.informaticon.com/posts/kurzanleitung-exf-analyzer-kfa2kc7i</projectUrl>
-    <iconUrl>https://choco.informaticon.com/endpoints/Icons/content/exf-analyzer.png</iconUrl>
+    <iconUrl>https://artifactory.informaticon.com/artifactory/choco-media-local/icons/exf-analyzer.png</iconUrl>
     <copyright>Informaticon AG</copyright>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags>exception framework powerbuilder analysis bug support</tags>
@@ -25,7 +25,7 @@ Newer A3 versions automatically upload error messages to this server and display
 See https://slab.informaticon.com/posts/kurzanleitung-exf-analyzer-kfa2kc7i for further information.
 
 Screenshot:
-![Screenshot](https://choco.informaticon.com/endpoints/Icons/content/screenshots/exf_analyzer.png)
+![Screenshot](https://artifactory.informaticon.com/artifactory/choco-media-local/screenshots/exf_analyzer.png)
     </description>
     <releaseNotes>
     </releaseNotes>
