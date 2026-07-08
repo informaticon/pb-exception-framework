@@ -148,7 +148,7 @@ jobs:
 
   push-svn:
     if: github.repository_visibility == 'private'
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, windows]
     needs:
       - backport-pb2022r3
     steps:
